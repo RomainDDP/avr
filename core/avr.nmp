@@ -1,0 +1,44 @@
+
+// identification
+let NAME = "avr"
+let VERSION = "1.0"
+let ARCH = "avr"
+let BUILDER = "atmel"
+let LICENSE = "GPL"
+let COPYRIGHT = "University of Toulouse"
+let YEAR = "2019"
+let URL = ""
+
+// useful types
+type bit = card(1)
+type byte = card(8)
+type word = card(16)
+
+// registers
+reg R[32, byte]
+//reg X[1, word] alias = R[27] :: R[26]
+reg X[1, word] alias = R[26]
+//reg Y[1, word] alias = R[29] :: R[28]
+reg Y[1, word] alias = R[28]
+//reg Z[1, word] alias = R[31] :: R[30]
+reg Z[1, word] alias = R[30]
+reg PC[1, word]
+reg SP[1, word]
+reg SR[1, byte]
+reg SR_I[1, bit] alias = SR<7..7>
+reg SR_T[1, bit] alias = SR<6..6>
+reg SR_H[1, bit] alias = SR<5..5>
+reg SR_S[1, bit] alias = SR<4..4>
+reg SR_V[1, bit] alias = SR<3..3>
+reg SR_N[1, bit] alias = SR<2..2>
+reg SR_Z[1, bit] alias = SR<1..1>
+reg SR_C[1, bit] alias = SR<0..0>
+
+// separated structure
+//		flash -- 0x0000-0x3FFF
+//		SRAM  -- 0x0000-0x08FF
+//			32 registers			0x0000-0x001F
+//			64 I/O registers 		0x0020-0x005F
+//			160 Ext I/O registers	0x0060-0x00FF
+//			Internal SRAM			0x0100-0x08FF
+
