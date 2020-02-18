@@ -60,14 +60,18 @@ mode reg_mode_16(i: rindex) = R[i]
 
 
 
-op instruction(x: allinstr)
+op instruction(x: allinstruction)
+	syntax = x.syntax
+	image = x.image
+	action = { x.action; }
+
+
+op plus_one(x: oneinstr)
 	syntax = x.syntax
 	image = x.image
 	action = { x.action; PC = PC + 1; }
 
-//ADC – Add with Carry
-
-op allinstr = 
+op oneinstr = 
 			ADC
 		   |ADD
 		   |AND
@@ -76,6 +80,9 @@ op allinstr =
 		   |BCLR
 		   |BLD
 		   /*|ADIW*/
+
+op allinstruction = plus_one
+				   |complexeinstr
 
 op ADC(d: reg_mode, r: reg_mode)
 	syntax = format("adc %s,%s",d,r)                                             //adc r2,r0
