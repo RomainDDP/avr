@@ -26,7 +26,7 @@ reg X[1, word] alias = R[26]
 reg Y[1, word] alias = R[28]
 //reg Z[1, word] alias = R[31] :: R[30]
 reg Z[1, word] alias = R[30]
-reg PC[1, word]
+reg PC[1, word] pc = 1
 reg SP[1, word]
 reg SR[1, byte]
 reg SR_I[1, bit] alias = SR<7..7>
@@ -49,6 +49,7 @@ reg SR_C[1, bit] alias = SR<0..0>
 type rindex = card(5)
 
 mode reg_mode(i: rindex) = R[i]
+	ii = i
 	syntax = format("r%d", i)
 	image = format("%5b", i)
 
@@ -61,19 +62,19 @@ op instruction(x: allinstr)
 
 op allinstr = 
 			ADC
-		   |ADD
+		   /*|ADD
 		   |ADIW
 		   |AND
 		   |ANDI
 		   |ASR
 		   |BCLR
-		   |BLD
+		   |BLD*/
 
 op ADC(d: reg_mode, r: reg_mode)
 	syntax = format("ADC %s,%s",d,r)                                             //adc r2,r0
-	image = format("0001 11 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)    //0001 11rd dddd rrrr
+	image = format("0001 11 %1b %1b %4b %4b", r.ii<4..4>, d.ii<4..4>, d.ii<3..0>, r.ii<3..0>)    //0001 11rd dddd rrrr
 	action = {
-			   R=d+r+SR_C;
+			   let R = d+r+SR_C;
 			   SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!R<3..3>)|(!R<3..3>&d<3..3>); 
 			   SR_S = SR_N ^ SR_V; 											     
 			   SR_V = (d<7..7>&r<7..7>&!d<7..7>)|(!d<7..7>&!r<7..7>&R<7..7>);
@@ -143,8 +144,8 @@ op BCLR(s: card(3))
 	action = { 
 				SR<s..s> = 0;
 			 }
-			 
-op BLD(d: reg_mode, r:reg_mode)
+
+op BLD(d: reg_mode, r:reg_mode)	
 	syntax = format("ADC %s,%s",d,r)
 	image = format("0001 1100 %s %s",d,r)
 	action = { }

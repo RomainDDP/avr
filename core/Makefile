@@ -37,11 +37,11 @@ ifdef WITH_DYNLIB
 REC_FLAGS = WITH_DYNLIB=1
 endif
 
-GFLAGS += \
+GFLAGS += -D \
 	-m mem:$(MEMORY) \
 	-m loader:$(LOADER) \
-	-m emu:extern/emu \
-	-m env:void_env
+	-m env:void_env \
+	-m code:code
 	
 
 
@@ -64,7 +64,7 @@ src include: $(ARCH).irg
 check: $(ARCH).irg
 	$(GLISS_PREFIX)/gep/gep $(GFLAGS) $< -S -c
 
-lib: src include
+lib: src include include/$(ARCH)/config.h src/disasm.c
 	(cd src; make -j $(REC_FLAGS))
 
 $(ARCH)-disasm:
@@ -88,8 +88,7 @@ only-clean:
 
 HOST_ENDIAN = $(shell python -c "import sys; print(sys.byteorder)")
 
-include/$(ARCH)/config.h: config.tpl
+include/$(ARCH)/config.h:
 	test -d include/$(ARCH) || mkdir include/$(ARCH)
-	cp config.tpl $@
-	echo "#define TARGET_ENDIANNESS $(CPU_ENDIAN)" >> $@
+	echo "#define TARGET_ENDIANNESS $(CPU_ENDIAN)" > $@
 	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
