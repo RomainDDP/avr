@@ -72,48 +72,70 @@ op allinstr =
 op ADC(d: reg_mode, r: reg_mode)
 	syntax = format("ADC %s,%s",d,r)                                             //adc r2,r0
 	image = format("0001 11 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)    //0001 11rd dddd rrrr
-	action = { SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!SR<3..3>)|(!SR<3..3>&d<3..3>); 
+	action = {
+			   R=d+r+SR_C;
+			   SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!R<3..3>)|(!R<3..3>&d<3..3>); 
 			   SR_S = SR_N ^ SR_V; 											     
-			   SR_V = (d<7..7>&r<7..7>&!SR<7..7>)|(!d<7..7>&!r<7..7>&SR<7..7>);
-			   SR_N = SR<7..7>;												     
-			   SR_Z = !(SR<7..7>|SR<6..6>|SR<5..5>|SR<4..4>|SR<3..3>|SR<2..2>|SR<1..1>|SR<0..0>); 
-			   SR_C = (d<7..7>&r<6..6>) | (r<7..7>&!SR<7..7>) | (!SR<7..7>&d<7..7>);
+			   SR_V = (d<7..7>&r<7..7>&!d<7..7>)|(!d<7..7>&!r<7..7>&R<7..7>);
+			   SR_N = R<7..7>;						     
+			   SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>); 
+			   SR_C = (d<7..7>&r<6..6>) | (r<7..7>&!SR<7..7>) | (!R<7..7>&d<7..7>);
+			   //d=R;
 			 }
 
-op ADD(d: reg_mode, r:reg_mode)
-	syntax = format("ADD %s,%s",d,r)                                             //ADD r2,r0
-	image = format("0001 11 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)    //0001 11rd dddd rrrr
-	action = { SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!SR<3..3>)|(!SR<3..3>&d<3..3>); 
+op ADD(d: reg_mode, r: reg_mode)
+	syntax = format("ADD %s,%s",d,r)                                             //adc r2,r0
+	image = format("0000 11 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)    //0001 11rd dddd rrrr
+	action = {
+			   R=d+r+SR_C;
+			   SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!R<3..3>)|(!R<3..3>&d<3..3>); 
 			   SR_S = SR_N ^ SR_V; 											     
-			   SR_V = (d<7..7>&r<7..7>&!SR<7..7>)|(!d<7..7>&!r<7..7>&SR<7..7>);
-			   SR_N = SR<7..7>;												     
-			   SR_Z = !(SR<7..7>|SR<6..6>|SR<5..5>|SR<4..4>|SR<3..3>|SR<2..2>|SR<1..1>|SR<0..0>); 
-			   SR_C = (d<7..7>&r<6..6>) | (r<7..7>&!SR<7..7>) | (!SR<7..7>&d<7..7>);
+			   SR_V = (d<7..7>&r<7..7>&!d<7..7>)|(!d<7..7>&!r<7..7>&R<7..7>);
+			   SR_N = R<7..7>;						     
+			   SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>); 
+			   SR_C = (d<7..7>&r<6..6>) | (r<7..7>&!SR<7..7>) | (!R<7..7>&d<7..7>);
+			   //d=R;
 			 }
 
-op ADIW(d: reg_mode, r:reg_mode)
-	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
+op ADIW(d: card(5),imm: int(5))
+	syntax = format("adiw r%d:r%d,%d",d,d-1,imm)                                      
+	//image = format("1001 0110 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)
+	action = {}
 
 op AND(d: reg_mode, r:reg_mode)
-	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
+	syntax = format("and %s,%s",d,r)
+	image = format("0010 00 %1b %1b %4b %4b",,r<4..4>,d<4..4>,d<3..0>,r<3..0>)
+	action = { 
+			   R=d&r;
+			   SR_S = SR_N ^ SR_V; 											     
+			   SR_V = 0;
+			   SR_N = R<7..7>;
+			   SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);
+			   //d=R;
+			 }
 
-op ANDI(d: reg_mode, r:reg_mode)
-	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
+op ANDI(d: reg_mode, K:card(8))
+	syntax = format("andi %s,$%d",d,K)
+	image = format("0111 %4b %4b %4b",K<7..4>,d<3..0>,K<3..0>)
+	action = { 
+				R=d&K;
+				SR_S = SR_N ^ SR_V; 
+				SR_V = 0;
+			    SR_N = R<7..7>;
+			    SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);	
+	 		 }
 
-op ASR(d: reg_mode, r:reg_mode)
-	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
+op ASR(d: reg_mode)
+	syntax = format("asr %s",d)
+	image = format("1001 010 %5b 0101",d)
+	action = { 
+			    R=d>>1;
+				SR_S = SR_N ^ SR_V;
+				SR_V =  SR_N ^ SR_C;
+				SR_N = R<7..7>;
+				SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);	
+				SR_C = d<0..0>;
+			 }
 
 op BCLR(d: reg_mode, r:reg_mode)
 	syntax = format("ADC %s,%s",d,r)
