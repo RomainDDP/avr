@@ -137,14 +137,14 @@ op ASR(d: reg_mode)
 				SR_C = d<0..0>;
 			 }
 
-op BCLR(d: reg_mode, r:reg_mode)
-	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
-
+op BCLR(s: card(3))
+	syntax = format("BCLR %d",s)
+	image = format("1001 0100 1%3b 1000",s)
+	action = { 
+				SR<s..s> = 0;
+			 }
+			 
 op BLD(d: reg_mode, r:reg_mode)
 	syntax = format("ADC %s,%s",d,r)
-	//image = "0001 1100 0000 0000"
 	image = format("0001 1100 %s %s",d,r)
 	action = { }
