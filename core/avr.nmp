@@ -85,7 +85,6 @@ op oneinstr =
 		   /*|ADIW*/
 
 op allinstruction = plus_one
-				   |complexeinstr
 
 op ADC(d: reg_mode, r: reg_mode)
 	syntax = format("adc %s,%s",d,r)                                             //adc r2,r0
@@ -163,6 +162,6 @@ op BCLR(s: card(3))
 			 }
 
 op BLD(d: reg_mode, b:card(3))
-	syntax = format("bld %s, %d",d,b)
+	syntax = format("bld %s, %d", d, b)
 	image = format("1111 100 %5b 0 %3b",d.ii<4..0>,b)
 	action = { d<b..b>=SR_T; }

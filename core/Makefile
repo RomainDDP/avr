@@ -6,8 +6,8 @@ WITH_DISASM		= 1	# comment it to prevent disassembler building
 WITH_SIM		= 1	# comment it to prevent simulator building
 #WITH_DYNLIB	= 1	# uncomment it to build dynamicaly linkable library
 #WITH_OSEMUL	= 1 # uncomment it to use OS emulation of system calls (only with Unix)
-CPU_ENDIAN		= little	# change to big if required
-MEM_ENDIAN		= little	# change to big if required
+HOST_ENDIAN		= little	# change to big if required
+TARGET_ENDIAN	= little	# change to big if required
 
 MEMORY=vfast_mem			# select here the memory module
 LOADER=old_elf				# select here the loaded module
@@ -90,5 +90,5 @@ HOST_ENDIAN = $(shell python -c "import sys; print(sys.byteorder)")
 
 include/$(ARCH)/config.h:
 	test -d include/$(ARCH) || mkdir include/$(ARCH)
-	echo "#define TARGET_ENDIANNESS $(CPU_ENDIAN)" > $@
+	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" > $@
 	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
