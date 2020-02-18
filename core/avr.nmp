@@ -85,6 +85,11 @@ op oneinstr =
 		   |RJMP
 		   |LDS
 		   |PUSH
+		   |POP
+		   |BREAK
+		   |BSET
+		   |BST
+		   |CLH
 		   /*|ADIW*/
 
 op allinstruction = plus_one
@@ -184,3 +189,28 @@ op PUSH(r: reg_mode)
 	image = format("1001 001%5b 1111",r.ii<4..0>)
 	action = {SP=r; SP=SP-1;}
 
+op POP(r: reg_mode)
+	syntax = format("pop %s",r)
+	image = format("1001 000%5b 1111",r.ii<4..0>)
+	action = {r=SP; SP=SP+1;}
+
+op BREAK()
+	syntax = "BREAK"
+	image = "1001 0101 1001 1000"
+	action = { }
+
+op BSET(s: card(3))
+	syntax = format("bset %d",s)
+	image = format("1001 0100 0%3b 1000",s<2..0>)
+	action = { SR<s..s> = 1; }
+
+op BST(d:reg_mode, s: card(3))
+	syntax = format("bst %s,%d",d,s)
+	image = format("1111 101 %5b 0%3b",d.ii<4..0>,s<2..0>)
+	action = { SR_T = d<s..s>; }
+
+
+op CLH()
+	syntax = "CLH"
+	image = "1001 0100 1101 1000"
+	action = { SR_H = 0;}
