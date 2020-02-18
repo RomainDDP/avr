@@ -88,7 +88,8 @@ only-clean:
 
 HOST_ENDIAN = $(shell python -c "import sys; print(sys.byteorder)")
 
-include/$(ARCH)/config.h:
+include/$(ARCH)/config.h: config.tpl
 	test -d include/$(ARCH) || mkdir include/$(ARCH)
-	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" > $@
+	cp config.tpl $@
+	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" >> $@
 	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
