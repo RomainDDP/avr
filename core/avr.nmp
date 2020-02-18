@@ -89,7 +89,7 @@ op oneinstr =
 		   |BREAK
 		   |BSET
 		   |BST
-		   |CLH
+		   |LAT
 		   /*|ADIW*/
 
 op allinstruction = plus_one
@@ -209,8 +209,7 @@ op BST(d:reg_mode, s: card(3))
 	image = format("1111 101 %5b 0%3b",d.ii<4..0>,s<2..0>)
 	action = { SR_T = d<s..s>; }
 
-
-op CLH()
-	syntax = "CLH"
-	image = "1001 0100 1101 1000"
-	action = { SR_H = 0;}
+op LAT(d:reg_mode)
+	syntax = format("LAT Z,%s",d)
+	image = format("1001001%5b0111",d.ii<4..0>)
+	action = { SR_Z = d^SR_Z;d=SR_Z ;}
