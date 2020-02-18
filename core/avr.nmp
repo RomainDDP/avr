@@ -45,6 +45,9 @@ reg SR_C[1, bit] alias = SR<0..0>
 //			64 I/O registers 		0x0020-0x005F
 //			160 Ext I/O registers	0x0060-0x00FF
 //			Internal SRAM			0x0100-0x08FF
+mem M[16, byte] data_memory = 1
+mem M16[16, word] alias = M[0]
+mem FLASH[1*6, word] program_memory = 1
 
 type rindex = card(5)
 
