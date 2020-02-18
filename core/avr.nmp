@@ -56,6 +56,13 @@ mode reg_mode(i: rindex) = R[i]
 	syntax = format("r%d", i)
 	image = format("%5b", i)
 
+mode reg_mode_16(i: rindex) = R[i]
+	ii = i
+	syntax = format("r%d", i)
+	image = format("%4b", i)
+
+
+
 op instruction(x: allinstr)
 	syntax = x.syntax
 	image = x.image
@@ -65,16 +72,16 @@ op instruction(x: allinstr)
 
 op allinstr = 
 			ADC
-		   /*|ADD
-		   |ADIW
+		   |ADD
 		   |AND
 		   |ANDI
 		   |ASR
 		   |BCLR
-		   |BLD*/
+		   |BLD
+		   /*|ADIW*/
 
 op ADC(d: reg_mode, r: reg_mode)
-	syntax = format("ADC %s,%s",d,r)                                             //adc r2,r0
+	syntax = format("adc %s,%s",d,r)                                             //adc r2,r0
 	image = format("0001 11 %1b %1b %4b %4b", r.ii<4..4>, d.ii<4..4>, d.ii<3..0>, r.ii<3..0>)    //0001 11rd dddd rrrr
 	action = {
 			   let R = d+r+SR_C;
@@ -88,10 +95,10 @@ op ADC(d: reg_mode, r: reg_mode)
 			 }
 
 op ADD(d: reg_mode, r: reg_mode)
-	syntax = format("ADD %s,%s",d,r)                                             //adc r2,r0
-	image = format("0000 11 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)    //0001 11rd dddd rrrr
+	syntax = format("add %s,%s",d,r)                                             //adc r2,r0
+	image = format("0000 11 %1b %1b %4b %4b",r.ii<4..4>,d.ii<4..4>,d.ii<3..0>,r.ii<3..0>)    //0001 11rd dddd rrrr
 	action = {
-			   R=d+r+SR_C;
+			   let R=d+r+SR_C;
 			   SR_H = (d<3..3>&r<3..3>)|(r<3..3>&!R<3..3>)|(!R<3..3>&d<3..3>); 
 			   SR_S = SR_N ^ SR_V; 											     
 			   SR_V = (d<7..7>&r<7..7>&!d<7..7>)|(!d<7..7>&!r<7..7>&R<7..7>);
@@ -108,9 +115,9 @@ op ADIW(d: card(5),imm: int(5))
 
 op AND(d: reg_mode, r:reg_mode)
 	syntax = format("and %s,%s",d,r)
-	image = format("0010 00 %1b %1b %4b %4b",,r<4..4>,d<4..4>,d<3..0>,r<3..0>)
+	image = format("0010 00 %1b %1b %4b %4b",,r.ii<4..4>,d.ii<4..4>,d.ii<3..0>,r.ii<3..0>)
 	action = { 
-			   R=d&r;
+			   let R=d&r;
 			   SR_S = SR_N ^ SR_V; 											     
 			   SR_V = 0;
 			   SR_N = R<7..7>;
@@ -118,11 +125,11 @@ op AND(d: reg_mode, r:reg_mode)
 			   //d=R;
 			 }
 
-op ANDI(d: reg_mode, K:card(8))
-	syntax = format("andi %s,$%d",d,K)
-	image = format("0111 %4b %4b %4b",K<7..4>,d<3..0>,K<3..0>)
-	action = { 
-				R=d&K;
+op ANDI(d: reg_mode_16, K:card(8))
+	syntax = format("andi %s,$%d", d, K)
+	image = format("0111 %4b %4b %4b", K<7..4>, d.ii<4..0>, K<3..0>)
+	action = {
+				let R=d&K;
 				SR_S = SR_N ^ SR_V; 
 				SR_V = 0;
 			    SR_N = R<7..7>;
@@ -131,24 +138,24 @@ op ANDI(d: reg_mode, K:card(8))
 
 op ASR(d: reg_mode)
 	syntax = format("asr %s",d)
-	image = format("1001 010 %5b 0101",d)
+	image = format("1001 010 %5b 0101",d.ii<4..0>)
 	action = { 
-			    R=d>>1;
+			    let R=d>>1;
 				SR_S = SR_N ^ SR_V;
 				SR_V =  SR_N ^ SR_C;
 				SR_N = R<7..7>;
 				SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);	
 				SR_C = d<0..0>;
-			 }
+			 }	
 
 op BCLR(s: card(3))
-	syntax = format("BCLR %d",s)
-	image = format("1001 0100 1%3b 1000",s)
+	syntax = format("bclr %d",s)
+	image = format("1001 0100 1%3b 1000",s<2..0>)
 	action = { 
 				SR<s..s> = 0;
 			 }
 
-op BLD(d: reg_mode, r:reg_mode)	
-	syntax = format("ADC %s,%s",d,r)
-	image = format("0001 1100 %s %s",d,r)
-	action = { }
+op BLD(d: reg_mode, b:card(3))
+	syntax = format("bld %s, %d",d,b)
+	image = format("1111 100 %5b 0 %3b",d.ii<4..0>,b)
+	action = { d<b..b>=SR_T; }
