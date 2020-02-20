@@ -124,6 +124,8 @@ op oneinstr =
 		   |STDZ1
 		   |STDZ2
 		   |STDZ3
+		   |IN
+		   |RET
 		   //|STD4
 		   //|LSL
 		   //|LDDZ4
@@ -449,3 +451,13 @@ op STDZ4(d:reg_mode,q:card(6))
 	syntax = format("ldd %s,z+%d",d,q)
 	image = format("10%1b0 %2b0%5b 0%3b",q<5..5>,q<4..3>,d.ii<4..0>,q<2..0>)
 	action = { d=Z+q; }
+
+op IN(d:reg_mode,a:card(6))
+	syntax = format("in %s,%d",d,a)
+	image = format("1011 0%2b %5b %4b",a<5..4>,d.ii<4..0>,a<3..0>)
+	action = {  }
+
+op RET()
+	syntax = "ret"
+	image = "1001 0101 0000 1000"
+	action = { SP=SP+2; }
