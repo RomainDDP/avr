@@ -1,7 +1,6 @@
-
 # configuration
 ARCH=avr
-GLISS_PREFIX	=../../gliss2
+GLISS_PREFIX	=../../gliss2.trunk
 WITH_DISASM		= 1	# comment it to prevent disassembler building
 WITH_SIM		= 1	# comment it to prevent simulator building
 #WITH_DYNLIB	= 1	# uncomment it to build dynamicaly linkable library
@@ -42,12 +41,9 @@ GFLAGS += -D \
 	-m loader:$(LOADER) \
 	-m env:void_env \
 	-m code:code
-	
-
 
 NMP_MAIN = $(ARCH).nmp
 NMP = $(NMP_MAIN)
-
 
 # targets
 all: lib $(GOALS)

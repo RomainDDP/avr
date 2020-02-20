@@ -47,7 +47,7 @@ reg SR_C[1, bit] alias = SR<0..0>
 //			Internal SRAM			0x0100-0x08FF
 mem M[16, byte] data_memory = 1
 mem M16[16, word] alias = M[0]
-mem FLASH[1*6, word] program_memory = 1
+mem FLASH[16, word] program_memory = 1
 
 type rindex = card(5)
 
@@ -59,8 +59,12 @@ mode reg_mode(i: rindex) = R[i]
 mode reg_mode_16(i: rindex) = R[i]
 	ii = i
 	syntax = format("r%d", i)
-	image = format("%4b", i)
+	image = format("%3b", i)
 
+mode reg_mode_2(i: rindex) = R[i]
+	ii = i
+	syntax = format("r%d", i)
+	image = format("%2b", i)
 
 op instruction(x: allinstruction)
 	syntax = x.syntax
@@ -90,7 +94,40 @@ op oneinstr =
 		   |BST
 		   |LAT
 		   |LDI
-		   /*|ADIW*/
+		   |CPC
+		   |CPI
+		   |BRNE
+		   |ADIW
+		   |SBCI
+		   |LD1
+		   |LD2
+		   |LD3
+		   |LDD1
+		   |LDD2
+		   |LDD3
+		   |LDDZ1
+		   |LDDZ2
+		   |LDDZ3
+		   |LDS16
+		   |LPM1
+		   |LPM2
+		   |LPM3
+		   |LSR
+		   |MOV
+		   |MOVW
+		   |STS
+		   |STS16
+		   |SBIW
+		   |STD1
+		   |STD2
+		   |STD3
+		   |STDZ1
+		   |STDZ2
+		   |STDZ3
+		   //|STD4
+		   //|LSL
+		   //|LDDZ4
+		   //|LDD4
 
 op allinstruction = plus_one
 
@@ -127,9 +164,9 @@ op ADD(d: reg_mode, r: reg_mode)
 			   //d=R;
 			 }
 
-op ADIW(d: card(5),imm: int(5))
-	syntax = format("adiw r%d:r%d,%d",d,d-1,imm)                                      
-	//image = format("1001 0110 %1b %1b %4b %4b",r<4..4>,d<4..4>,d<3..0>,r<3..0>)
+op ADIW(d: reg_mode_2, r: card(6))
+	syntax = format("adiw %s:%s,%d",d,d,r)                                    
+	image = format("1001 0110 %2b %2b %4b",r<5..4>,d.ii<4..0>,r<3..0>)
 	action = { }
 
 op AND(d: reg_mode, r:reg_mode)
@@ -199,7 +236,7 @@ op POP(r: reg_mode)
 	syntax = format("pop %s",r)
 	image = format("1001 000%5b 1111",r.ii<4..0>)
 	action = {r=SP; SP=SP+1;}
-	
+
 op BREAK()
 	syntax = "BREAK"
 	image = "1001 0101 1001 1000"
@@ -220,7 +257,195 @@ op LAT(d:reg_mode)
 	image = format("1001001%5b0111",d.ii<4..0>)
 	action = { SR_Z = d^SR_Z;d=SR_Z ;}
 
+op CPC(d:reg_mode,r:reg_mode)
+	syntax = format("cpc %s,%s",d,r)
+	image = format("0000 01%1b %5b %4b",r.ii<4..4>,d.ii<4..0>,r.ii<3..0>)
+	action = { 
+				let R=d-r-SR_C;
+				SR_H = (!d<3..3>&r<3..3>)|(r<3..3>&R<3..3>)| (R<3..3>&!d<3..3>);
+				SR_S = SR_N ^ SR_V; 
+				SR_V = (d<7..7>&!r<7..7>&!R<7..7>)|(!d<7..7>&r<7..7>&R<7..7>);
+			    SR_N = R<7..7>;
+			    SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>|SR_Z);	
+	 		 	SR_C = (!d<7..7>&r<7..7>)|(r<7..7>&R<7..7>)|(R<7..7>&!d<7..7>);
+			  }
+
+op CPI(d:reg_mode_16,k:card(8))
+	syntax = format("cpi %s,%d",d,k)
+	image = format("0011 %4b %4b %4b",k<7..4>,d.ii<4..0>,k<3..0>)
+	action = { 
+				let R=d-k;
+				SR_H = (!d<3..3>&k<3..3>)|(k<3..3>&R<3..3>)| (R<3..3>&!d<3..3>);
+				SR_S = SR_N ^ SR_V; 
+				SR_V = (d<7..7>&!k<7..7>&!R<7..7>)|(!d<7..7>&k<7..7>&R<7..7>);
+			    SR_N = R<7..7>;
+			    SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);	
+	 		 	SR_C = (!d<7..7>&k<7..7>)|(k<7..7>&R<7..7>)|(R<7..7>&!d<7..7>);
+			  }
+
 op LDI(d:reg_mode_16,k: card(8))
 	syntax = format("ldi %s,%d",d,k)
 	image = format("1110 %4b %4b %4b",k<7..4>,d.ii<4..0>,k<3..0>)
 	action = { 	}
+
+op BRNE(k: card(7))
+	syntax = format("brne %d",k)
+	image = format("1111 01 %7b 001",k<6..0>)
+	action = { if SR<1..1> then PC = PC + 1; else PC = PC + 1 ; endif; }
+
+op SBCI(d: reg_mode_16,k: card(8))
+	syntax = format("sbci %s,%d",d,k)
+	image = format("0100 %4b %4b %4b",k<7..4>,d.ii<4..0>,k<3..0>)
+	action = { }
+
+op LD1(d:reg_mode)
+	syntax = format("ld %s,X",d)
+	image = format("1001000%5b1100",d.ii<4..0>)
+	action = { d=X; }
+
+op LD2(d:reg_mode)
+	syntax = format("ld %s,X+",d)
+	image = format("1001 000%5b 1101",d.ii<4..0>)
+	action = { d=X+1; }
+
+op LD3(d:reg_mode)
+	syntax = format("ld %s,X-",d)
+	image = format("1001000%5b1110",d.ii<4..0>)
+	action = { d=X-1; }
+
+op LDD1(d:reg_mode)
+	syntax = format("ldd %s,Y",d)
+	image = format("1000 000%5b 1000",d.ii<4..0>)
+	action = { d=Y; }
+
+op LDD2(d:reg_mode)
+	syntax = format("ldd %s,Y+",d)
+	image = format("1000 000%5b 1001",d.ii<4..0>)
+	action = { d=Y+1; }
+
+op LDD3(d:reg_mode)
+	syntax = format("ldd %s,Y-",d)
+	image = format("1000 000%5b 1010",d.ii<4..0>)
+	action = { d=Y-1; }
+
+op LDDZ1(d:reg_mode)
+	syntax = format("ldd %s,Z",d)
+	image = format("1000 000%5b 0000",d.ii<4..0>)
+	action = { d=Z; }
+
+op LDDZ2(d:reg_mode)
+	syntax = format("ldd %s,Z+",d)
+	image = format("1000 000%5b 0001",d.ii<4..0>)
+	action = { d=Z+1; }
+
+op LDDZ3(d:reg_mode)
+	syntax = format("ldd %s,Z-",d)
+	image = format("1000 000%5b 0010",d.ii<4..0>)
+	action = { d=Z-1; }
+
+op LDDZ4(d:reg_mode,q:card(6))
+	syntax = format("ldd %s,z+%d",d,q)
+	image = format("10%1b0 %2b0%5b 0%3b",q<5..5>,q<4..3>,d.ii<4..0>,q<2..0>)
+	action = { d=Z+q; }
+
+op LDS16(d: reg_mode, k:card(7))
+	syntax = format("lds %s,%d",d,k)
+	image = format("1010 0%3b %4b %4b",k<6..4>,d.ii<4..0>,k<3..0>)
+	action = { PC = PC + 1 ; d=k;}
+
+op LPM1()
+	syntax = "lpm"
+	image = "1001 0101 1100 1000"
+	action = { }
+
+op LPM2(d: reg_mode)
+	syntax = format("lpm %s, Z",d)
+	image = format("1001 000%5b 0100",d.ii<4..0>)
+	action = { d=SR_Z; }
+
+op LPM3(d: reg_mode)
+	syntax = format("lpm %s,Z+",d)
+	image = format("1001 000%5b 0101",d.ii<4..0>)
+	action = { d=SR_Z+1;}
+
+op LSL(d: reg_mode)
+	syntax = format("lsl %s",d)
+	image = format("0000 11%1b %1b %4b %4b",d.ii<4..4>,d.ii<4..4>,d.ii<3..0>,d.ii<3..0>)
+	action = { }
+
+op LSR(d: reg_mode)
+	syntax = format("lsr %s",d)
+	image = format("1001 010%5b 0110",d.ii<4..0>)
+	action = { 
+			   SR_S = SR_N ^ SR_V; 											     
+			   SR_V = SR_N^SR_C;
+			   SR_N = 0;
+			   SR_C = d.ii<0..0>; 
+			   //SR_Z = !(R<7..7>|R<6..6>|R<5..5>|R<4..4>|R<3..3>|R<2..2>|R<1..1>|R<0..0>);
+	}
+
+op MOV(d: reg_mode,r: reg_mode)
+	syntax = format("mov %s,%s",d,r)
+	image = format("0010 11%1b%5b %4b",r.ii<4..4>,d.ii<4..0>,r.ii<3..0>)
+	action = { d=r; }
+
+op MOVW(d: reg_mode,r: reg_mode)
+	syntax = format("mov %s:%s,%s:%s",d,d,r,r)                                    
+	image = format("0000 0001 %4b %4b",d.ii<4..0>,r.ii<4..0>)
+	action = { }
+
+op STS(d: reg_mode,k: card(16))
+	syntax = format("sts %d, %s",k,d)                                    
+	image = format("1001 001%5b 0000 %16b",d.ii<4..0>,k<15..0>)
+	action = { }
+
+op STS16(d: reg_mode_16,k: card(7))
+	syntax = format("sts %d, %s",k,d)                                    
+	image = format("1010 1%3b %4b %4b",k<6..4>,d.ii<4..0>,k<3..0>)
+	action = { }
+
+
+op SBIW(d: reg_mode_2, r: card(6))
+	syntax = format("sbiw %s:%s,%d",d,d,r)                                    
+	image = format("1001 0111 %2b %2b %4b",r<5..4>,d.ii<4..0>,r<3..0>)
+	action = { }
+
+op STD1(d:reg_mode)
+	syntax = format("std Y,%s",d)
+	image = format("1000 001%5b 1000",d.ii<4..0>)
+	action = { Y=d; }
+
+op STD2(d:reg_mode)
+	syntax = format("std Y+,%s",d)
+	image = format("1001 001%5b 1001",d.ii<4..0>)
+	action = { Y=Y+1; Y=d; }
+
+op STD3(d:reg_mode)
+	syntax = format("std Y-,%s",d)
+	image = format("1001 001%5b 1010",d.ii<4..0>)
+	action = { Y=Y-1; Y=d; }
+
+op STD4(d:reg_mode,q:card(6))
+	syntax = format("std Y+%d,%s",q,d)
+	image = format("10%1b0 %2b1%5b 1%3b",q<5..5>,q<4..3>,d.ii<4..0>,q<2..0>)
+	action = { d=Z+q; }
+
+op STDZ1(d:reg_mode)
+	syntax = format("std Z,%s",d)
+	image = format("1000 001%5b 0000",d.ii<4..0>)
+	action = { Y=d; }
+
+op STDZ2(d:reg_mode)
+	syntax = format("std Z+,%s",d)
+	image = format("1001 001%5b 0001",d.ii<4..0>)
+	action = { Y=Y+1; Y=d; }
+
+op STDZ3(d:reg_mode)
+	syntax = format("std Z-,%s",d)
+	image = format("1001 001%5b 0010",d.ii<4..0>)
+	action = { Y=Y-1; Y=d; }
+
+op STDZ4(d:reg_mode,q:card(6))
+	syntax = format("ldd %s,z+%d",d,q)
+	image = format("10%1b0 %2b0%5b 0%3b",q<5..5>,q<4..3>,d.ii<4..0>,q<2..0>)
+	action = { d=Z+q; }
