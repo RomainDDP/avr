@@ -66,6 +66,15 @@ mode reg_mode_2(i: rindex) = R[i]
 	syntax = format("r%d", i)
 	image = format("%2b", i)
 
+
+mode clean (c: int(0)) = c
+	num = c
+	syntax =
+		switch ( c ) {
+		case  1:	"CLI"
+		}
+	image  = format ( "%5b",c)
+
 op instruction(x: allinstruction)
 	syntax = x.syntax
 	image = x.image
@@ -99,16 +108,16 @@ op oneinstr =
 		   |BRNE
 		   |ADIW
 		   |SBCI
-		   |LD1
-		   |LD2
-		   |LD3
-		   |LDD1
-		   |LDD2
-		   |LDD3
-		   |LDDZ1
-		   |LDDZ2
-		   |LDDZ3
-		   |LDS16
+		   //|LD1
+		   //|LD2
+		   //|LD3
+		   //|LDD1
+		   //|LDD2
+		   //|LDD3
+		   //|LDDZ1
+		   //|LDDZ2
+		   //|LDDZ3
+		   //|LDS16
 		   |LPM1
 		   |LPM2
 		   |LPM3
@@ -116,14 +125,14 @@ op oneinstr =
 		   |MOV
 		   |MOVW
 		   |STS
-		   |STS16
+		   //|STS16
 		   |SBIW
-		   |STD1
-		   |STD2
-		   |STD3
-		   |STDZ1
-		   |STDZ2
-		   |STDZ3
+		   //|STD1
+		   //|STD2
+		   //|STD3
+		   //|STDZ1
+		   //|STDZ2
+		   //|STDZ3
 		   |IN
 		   |RET
 		   |RCALL
@@ -131,10 +140,11 @@ op oneinstr =
 		   |ST1
 		   |ST2
 		   |ST3
-		   //|STD4
+		   |STD4
 		   //|LSL
 		   //|LDDZ4
 		   //|LDD4
+		   //|CLI
 
 op allinstruction = plus_one
 
@@ -144,7 +154,7 @@ op init ()
 	}
 
 op ADC(d: reg_mode, r: reg_mode)
-	syntax = format("adc %s,%s",d,r)                                             //adc r2,r0
+	syntax = format("adc %s, %s",d,r)                                             //adc r2,r0
 	image = format("0001 11 %1b %1b %4b %4b", r.ii<4..4>, d.ii<4..4>, d.ii<3..0>, r.ii<3..0>)    //0001 11rd dddd rrrr
 	action = {
 			   let R = d+r+SR_C;
@@ -158,7 +168,7 @@ op ADC(d: reg_mode, r: reg_mode)
 			 }
 
 op ADD(d: reg_mode, r: reg_mode)
-	syntax = format("add %s,%s",d,r)                                             //adc r2,r0
+	syntax = format("add %s, %s",d,r)                                             //adc r2,r0
 	image = format("0000 11 %1b %1b %4b %4b",r.ii<4..4>,d.ii<4..4>,d.ii<3..0>,r.ii<3..0>)    //0001 11rd dddd rrrr
 	action = {
 			   let R=d+r+SR_C;
@@ -172,7 +182,7 @@ op ADD(d: reg_mode, r: reg_mode)
 			 }
 
 op ADIW(d: reg_mode_2, r: card(6))
-	syntax = format("adiw %s:%s,%d",d,d,r)                                    
+	syntax = format("adiw %s:%s, %d",d,d,r)                                    
 	image = format("1001 0110 %2b %2b %4b",r<5..4>,d.ii<4..0>,r<3..0>)
 	action = { }
 
@@ -384,6 +394,7 @@ op LSR(d: reg_mode)
 	syntax = format("lsr %s",d)
 	image = format("1001 010%5b 0110",d.ii<4..0>)
 	action = { 
+				//probleme dans la definition de R
 			   SR_S = SR_N ^ SR_V; 											     
 			   SR_V = SR_N^SR_C;
 			   SR_N = 0;
@@ -433,7 +444,7 @@ op STD3(d:reg_mode)
 	action = { Y=Y-1; Y=d; }
 
 op STD4(d:reg_mode,q:card(6))
-	syntax = format("std Y+%d,%s",q,d)
+	syntax = format("std Y+%d, %s",q,d)
 	image = format("10%1b0 %2b1%5b 1%3b",q<5..5>,q<4..3>,d.ii<4..0>,q<2..0>)
 	action = { d=Z+q; }
 
@@ -491,3 +502,8 @@ op ST3(d:reg_mode)
 	syntax = format("st -X,%s",d)
 	image = format("1001 001%5b 1110",d.ii<4..0>)
 	action = { X=X-1; Y=d; }
+
+op CLI()
+	syntax = "CLI"
+	image = "1001 0100 1111 1000"
+	action = { }
