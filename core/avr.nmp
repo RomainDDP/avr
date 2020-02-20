@@ -126,6 +126,11 @@ op oneinstr =
 		   |STDZ3
 		   |IN
 		   |RET
+		   |RCALL
+		   |BRLT
+		   |ST1
+		   |ST2
+		   |ST3
 		   //|STD4
 		   //|LSL
 		   //|LDDZ4
@@ -461,3 +466,28 @@ op RET()
 	syntax = "ret"
 	image = "1001 0101 0000 1000"
 	action = { SP=SP+2; }
+
+op RCALL(k:card(12))
+	syntax = format("rcall %d",k)
+	image = format("1101 %12b",k<11..0>)
+	action = { }
+
+op BRLT(k:card(7))
+	syntax = format("brlt %d",k)
+	image = format("1111 00%7b100",k<6..0>)
+	action = { if SR_N^SR_V then PC = PC +k+ 1; else PC = PC + 1 ; endif; }
+
+op ST1(d:reg_mode)
+	syntax = format("st X,%s",d)
+	image = format("1001 001%5b 1100",d.ii<4..0>)
+	action = { X=d; }
+
+op ST2(d:reg_mode)
+	syntax = format("st X+,%s",d)
+	image = format("1001 001%5b 1101",d.ii<4..0>)
+	action = { X=X+1; Y=d; }
+
+op ST3(d:reg_mode)
+	syntax = format("st -X,%s",d)
+	image = format("1001 001%5b 1110",d.ii<4..0>)
+	action = { X=X-1; Y=d; }
