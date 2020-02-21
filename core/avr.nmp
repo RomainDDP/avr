@@ -506,7 +506,7 @@ op RCALL(k:int(12))
 op BRLT(k:int(7))
 	syntax = format("brlt %d",k)
 	image = format("1111 00%7b100",k<6..0>)
-	action = { if SR_N^SR_V then PC = PC +2*(k-64)+ 2; else PC = PC + 2 ; endif; }
+	action = { if SR_N^SR_V then PC = PC +2*k+ 2; else PC = PC + 2 ; endif; }
 
 op ST1(d:reg_mode)
 	syntax = format("st X,%s",d)
