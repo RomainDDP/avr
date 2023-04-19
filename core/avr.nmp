@@ -12,6 +12,7 @@ let URL = ""
 let proc = "avr"
 let bit_order = "uppermost"
 let gliss_isize = "32,16"
+let RAMEND = 0x04FF
 
 // useful types
 type bit = card(1)
@@ -57,6 +58,15 @@ mem FLASH[17, byte] program_memory = 1
 
 macro store(a, x) = if a < 32 then R[a] = x; else M[a] = x; endif
 macro load(x, a) = if a < 32 then x = R[a]; else x = M[a]; endif
+
+op init()
+	action = {
+
+		// set SP
+		SP = RAMEND;
+		M[0x3D + 0x20] = RAMEND<7..0>;
+		M[0x3E + 0x20] = RAMEND<15..8>;
+	}
 
 op instruction(x: all)
 	syntax = x.syntax
@@ -147,7 +157,7 @@ op IN(A: card(6), d: rindex)
 	syntax = format("IN R%d, 0x%02x", d, A)
 	image = format("1011 0%2b %5b %4b", A<5..4>, d, A<3..0>)
 	action = {
-		// system dependent
+		load(R[d], A + 0x20);
 	}
 
 
