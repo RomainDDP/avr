@@ -1,2 +1,4 @@
-#define AVR_ORDER_BYTES_CISC \
-	word = (buff[1] << 24) | (buff[0] << 16) | (buff[3] << 8) | buff[2];
+GLISS_PREFIX	=../../gliss2
+WITH_DISASM		= 1	# comment it to prevent disassembler building
+WITH_SIM		= 1	# comment it to prevent simulator building
+#WITH_DYNLIB	= 1	# uncomment it to build dynamicaly linkable library

@@ -3,3 +3,5 @@ sim/
 src/
 disasm/
 include/
+config.mk
+log

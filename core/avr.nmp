@@ -66,6 +66,9 @@ op init()
 		SP = RAMEND;
 		M[0x3D + 0x20] = RAMEND<7..0>;
 		M[0x3E + 0x20] = RAMEND<15..8>;
+
+		// set PC
+		PC = 0;
 	}
 
 op instruction(x: all)
@@ -82,12 +85,12 @@ op inst16(x: all_inst16)
 	action = {  PC = PC + 2; x.action; }
 
 op all_inst16 =
-	  ADC | ADD | ADIW | SBIW
+	  ADC | ADD | ADIW | CPC | CPI | LDI | SBIW
 	| POP | PUSH
-	| BRLT
+	| BRLT | BRNE
 	| RCALL | RET | RJMP
 	| IN
-	| STD_Y | LDD_Y
+	| ST | STD_Y | LDD_Y
 
 op inst32(x: all_inst32)
 	syntax = x.syntax
@@ -146,12 +149,49 @@ op ADIW(d: card(2), k: card(6))
 
 
 op BRLT(k: int(7))
-	syntax = format("BRLT .%+d (%+04x)", k, __IADDR + 2 + k*2)
+	syntax = format("BRLT .%+d ; %+04x", k*2, __IADDR + 2 + k*2)
 	image = format("1111 00 %7b 100", k)
 	action = {
 		if SREG_N ^ SREG_V == 1 then PC = PC + k*2; endif;
 	}
-	
+
+
+op BRNE(k: int(7))
+	syntax = format("BRNE .%+d ; %+04x", k*2, __IADDR + 2 + k*2)
+	image = format("1111 01 %7b 001", k)
+	action = {
+		if SREG_Z == 0 then PC = PC + k*2; endif;
+	}
+
+
+op CPC(d: rindex, r: rindex)
+	syntax = format("CPC R%d, R%d", d, r)
+	image = format("0000 01%1b %5b %4b", r<4..4>, d, r<3..0>)
+	action = {
+		let Rd = R[d];
+		let Rr = R[r];
+		let R = Rd - Rr - SREG_C;
+		SREG_H = !Rd<3..3>&&Rr<3..3> || Rr<3..3>&&R<3..3> || R<3..3>&&!Rd<3..3>;
+		SREG_V = Rd<7..7>&&!Rr<7..7>&&!R<7..7> || !Rd<7..7>&&Rr<7..7>&&R<7..7>;
+		SREG_N = R<7..7>;
+		SREG_Z = R == 0;
+		SREG_C = !Rd<7..7>&&Rr<7..7> || Rr<7..7>&&R<7..7> || R<7..7>&&!Rd<7..7>;
+		SREG_S = SREG_N ^ SREG_V;
+	}
+
+op CPI(d: card(4), k: card(8))
+	syntax = format("CPI R%d, 0x%02x ; %d", d+16, k, k)
+	image = format("0011 %4b %4b %4b", k<7..4>, d, k<3..0>)
+	action = {
+		let Rd = R[d + 16];
+		let R = Rd - k;
+		SREG_H = !Rd<3..3>&&k<3..3> || k<3..3>&&R<3..3> || R<3..3>&&!Rd<3..3>;
+		SREG_V = Rd<7..7>&&!k<7..7>&&!R<7..7> || !Rd<7..7>&&k<7..7>&&R<7..7>;
+		SREG_N = R<7..7>;
+		SREG_Z = R == 0;
+		SREG_C = !Rd<7..7>&&k<7..7> || k<7..7>&&R<7..7> || R<7..7>&&!Rd<7..7>;
+		SREG_S = SREG_N ^ SREG_V;
+	}
 
 op IN(A: card(6), d: rindex)
 	syntax = format("IN R%d, 0x%02x", d, A)
@@ -187,6 +227,13 @@ op LDD_Y_iv(d: rindex, q: card(6))
 	image = format("10%1b0 %2b0 %5b 1%3b", q<5..5>, q<4..3>, d, q<2..0>)
 	action = {
 		load(R[d], Y + q);
+	}
+
+op LDI(d: rindex, k: card(8))
+	syntax = format("LDI R%d, 0x%02x ; %d", 16 + d, k, k)
+	image = format("1110 %4b %4b %4b", k<7..4>, d, k<3..0>)
+	action = {
+		R[d + 16] = k;
 	}
 
 op LDS(d: rindex, k: card(16))
@@ -237,7 +284,7 @@ op RET()
 	}
 
 op RJMP(k: int(12))
-	syntax = format("RJMP %d (%04x)", k*2, __IADDR + k*2 + 2)
+	syntax = format("RJMP .%+d ; %04x", k*2, __IADDR + k*2 + 2)
 	image = format("1100 %12b", k)
 	action = {
 		PC = PC + k*2;
@@ -257,6 +304,32 @@ op SBIW(d: card(2), k: card(6))
 		SREG_C = R_<15..15> && !R[dh]<7..7>;
 		SREG_S = SREG_N ^ SREG_V;
 		R[dh]::R[dl] = R_;
+	}
+
+
+op ST = ST_i | ST_ii | ST_iii
+
+op ST_i(r: rindex)
+	syntax = format("ST X, R%d", r)
+	image = format("1001 001 %5b 1100", r)
+	action = {
+		store(X, R[r]);
+	}
+
+op ST_ii(r: rindex)
+	syntax = format("ST X+, R%d", r)
+	image = format("1001 001 %5b 1101", r)
+	action = {
+		store(X, R[r]);
+		X = X + 1;
+	}
+
+op ST_iii(r: rindex)
+	syntax = format("ST -X, R%d", r)
+	image = format("1001 001 %5b 1110", r)
+	action = {
+		X = X - 1;
+		store(X, R[r]);
 	}
 
 

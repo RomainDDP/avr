@@ -1,12 +1,9 @@
 # configuration
 ARCH=avr
-GLISS_PREFIX	=../../gliss2
-WITH_DISASM		= 1	# comment it to prevent disassembler building
-WITH_SIM		= 1	# comment it to prevent simulator building
-#WITH_DYNLIB	= 1	# uncomment it to build dynamicaly linkable library
-#WITH_OSEMUL	= 1 # uncomment it to use OS emulation of system calls (only with Unix)
 HOST_ENDIAN		= little	# change to big if required
 TARGET_ENDIAN	= little	# change to big if required
+
+-include config.mk
 
 MEMORY=vfast_mem			# select here the memory module
 LOADER=old_elf				# select here the loaded module
@@ -28,7 +25,7 @@ endif
 ifdef WITH_SIM
 GOALS		+=	$(ARCH)-sim
 SUBDIRS		+=	sim
-DISTCLEAN	+=	sim
+DISTCLEAN	+=	sim config.mk
 GFLAGS		+=	-S
 endif
 
@@ -46,7 +43,7 @@ NMP_MAIN = $(ARCH).nmp
 NMP = $(NMP_MAIN)
 
 # targets
-all: lib $(GOALS)
+all: config.mk lib $(GOALS)
 
 $(ARCH).irg: $(NMP)
 	$(GLISS_PREFIX)/irg/mkirg $(NMP_MAIN) $@
@@ -82,10 +79,15 @@ clean: only-clean
 only-clean:
 	-rm -rf $(CLEAN)
 
-HOST_ENDIAN = $(shell python -c "import sys; print(sys.byteorder)")
+HOST_ENDIAN = $(shell python3 -c "import sys; print(sys.byteorder)")
 
-include/$(ARCH)/config.h: config.tpl
+include/$(ARCH)/config.h: extern/config.tpl
 	test -d include/$(ARCH) || mkdir include/$(ARCH)
-	cp config.tpl $@
+	cp extern/config.tpl $@
 	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" >> $@
 	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
+
+config: config.mk
+
+config.mk: config.tpl
+	cp $< $@
