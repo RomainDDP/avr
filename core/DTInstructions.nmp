@@ -1,0 +1,133 @@
+// identification
+let NAME = "avr.DTInstructions"
+let VERSION = "1.0"
+let ARCH = "avr"
+let BUILDER = "atmel"
+let LICENSE = "GPL"
+let COPYRIGHT = "University of Toulouse"
+let YEAR = "2019"
+let URL = ""
+
+include "config.nmp"
+
+
+////// Data Transfer Instructions //////
+
+op LDI(d: rindex, k: card(8))
+	syntax = format("LDI R%d, 0x%02x ; %d", 16 + d, k, k)
+	image = format("1110 %4b %4b %4b", k<7..4>, d, k<3..0>)
+	action = {
+		R[d + 16] = k;
+	}
+
+op LDS(d: rindex, k: card(16))
+	syntax = format("LDS R%d, 0x%04x", d, k)
+	image = format("1001 000 %5b 0000 %16b", d, k)
+	action = {
+		load(R[d], k);
+	}
+
+op LDD_Y = LDD_Y_ii | LDD_Y_iii | LDD_Y_iv
+
+op LDD_Y_ii(d: rindex)
+	syntax = format("LD R%d, Y+", d)
+	image = format("1001 000 %5b 1001", d)
+	action = {
+		load(R[d], Y);
+		Y = Y + 1;
+	}
+
+op LDD_Y_iii(d: rindex)
+	syntax = format("LD R%d, -Y", d)
+	image = format("1001 000 %5b 1010", d)
+	action = {
+		Y = Y - 1;
+		load(R[d], Y);
+	}
+
+op LDD_Y_iv(d: rindex, q: card(6))
+	syntax = format("LDD R%d, Y+%d", d, q)
+	image = format("10%1b0 %2b0 %5b 1%3b", q<5..5>, q<4..3>, d, q<2..0>)
+	action = {
+		load(R[d], Y + q);
+	}
+
+op STS(d: rindex, k: card(16))
+	syntax = format("STS 0x%04x, R%d", k, d)
+	image = format("1001 001 %5b 0000 %16b", d, k)
+	action = {
+		store(k, R[d]);
+	}
+
+op ST = ST_i | ST_ii | ST_iii
+
+op ST_i(r: rindex)
+	syntax = format("ST X, R%d", r)
+	image = format("1001 001 %5b 1100", r)
+	action = {
+		store(X, R[r]);
+	}
+
+op ST_ii(r: rindex)
+	syntax = format("ST X+, R%d", r)
+	image = format("1001 001 %5b 1101", r)
+	action = {
+		store(X, R[r]);
+		X = X + 1;
+	}
+
+op ST_iii(r: rindex)
+	syntax = format("ST -X, R%d", r)
+	image = format("1001 001 %5b 1110", r)
+	action = {
+		X = X - 1;
+		store(X, R[r]);
+	}
+
+op STD_Y = STD_Y_ii | STD_Y_iii | STD_Y_iv
+
+op STD_Y_ii(r: rindex)
+	syntax = format("ST Y+, R%d", r)
+	image = format("1001 001 %5b 1001", r)
+	action = {
+		store(Y, R[r]);
+		Y = Y + 1;
+	}
+
+op STD_Y_iii(r: rindex)
+	syntax = format("ST -Y, R%d", r)
+	image = format("1001 001 %5b 1010", r)
+	action = {
+		Y = Y - 1;
+		store(Y, R[r]);
+	}
+
+op STD_Y_iv(r: rindex, q: card(6))
+	syntax = format("STD Y+%d, R%d", q, r)
+	image = format("10%1b0 %2b1 %5b 1%3b", q<5..5>, q<4..3>, r, q<2..0>)
+	action = {
+		store(Y + q, R[r]);
+	}
+
+op IN(A: card(6), d: rindex)
+	syntax = format("IN R%d, 0x%02x", d, A)
+	image = format("1011 0%2b %5b %4b", A<5..4>, d, A<3..0>)
+	action = {
+		load(R[d], A + 0x20);
+	}
+
+op PUSH(d: rindex)
+	syntax = format("PUSH R%d", d)
+	image = format("1001 001 %5b 1111", d)
+	action = {
+		M[SP] = R[d];
+		SP = SP - 1;
+	}
+
+op POP(d: rindex)
+	syntax = format("POP R%d", d)
+	image = format("1001 000 %5b 1111", d)
+	action = {
+		SP = SP + 1;
+		R[d] = M[SP];
+	}

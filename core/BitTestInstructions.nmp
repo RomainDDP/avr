@@ -1,0 +1,13 @@
+// identification
+let NAME = "avr.BitTestInstructions"
+let VERSION = "1.0"
+let ARCH = "avr"
+let BUILDER = "atmel"
+let LICENSE = "GPL"
+let COPYRIGHT = "University of Toulouse"
+let YEAR = "2019"
+let URL = ""
+
+include "config.nmp"
+
+// Bit and Bit-Test Instructions 
