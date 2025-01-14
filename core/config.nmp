@@ -58,15 +58,3 @@ mem FLASH[17, byte] program_memory = 1
 
 macro store(a, x) = if a < 32 then R[a] = x; else M[a] = x; endif
 macro load(x, a) = if a < 32 then x = R[a]; else x = M[a]; endif
-
-op init()
-	action = {
-
-		// set SP
-		SP = RAMEND;
-		M[0x3D + 0x20] = RAMEND<7..0>;
-		M[0x3E + 0x20] = RAMEND<15..8>;
-
-		// set PC
-		PC = 0;
-	}
