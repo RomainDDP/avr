@@ -100,8 +100,29 @@ op SWAP(d: rindex)
     }
 
 op BLD(d: rindex, b: card(3))
-    syntax = format()
-    image = format()
+    syntax = format("BLD R%d, %d", d, b)
+    image = format("1111 100%1b %4b 0%3b", d<4..4>, d<3..0>, b<2..0>)
     action = {
-        
+        R[d]<b..b> = SREG_T;
+    }
+
+op BST(d: rindex, b:card(3))
+    syntax = format("BST R%d, %d", d, b)
+    image = format("1111 101%1b %4b 0%3b", d<4..4>, d<3..0>, b<2..0>)
+    action = {
+        SREG_T = R[d]<b..b>;
+    }
+
+op BSET(s: card(3))
+    syntax = format("BSET %d", s)
+    image = format("1001 0100 0%3b 1000", s<2..0>)
+    action = {
+        SREG<s..s> = 1;
+    }
+
+op BCLR(s: card(3))
+    syntax = format("BCLR %d", s)
+    image = format("1001 0100 1%3b 1000", s<2..0>)
+    action = {
+        SREG<s..s> = 0;
     }

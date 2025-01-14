@@ -8,8 +8,56 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "ALInstructions.nmp"
-include "CFInstructions.nmp"
+//configuration
+let proc = "avr"
+let bit_order = "uppermost"
+let gliss_isize = "32,16"
+let RAMEND = 0x04FF
+
+// useful types
+type bit = card(1)
+type byte = card(8)
+type word = card(16)
+type rindex = card(5)
+
+// registers
+reg R[32, byte]
+reg RP[16, word] alias=R[0]
+reg X[1, word] alias = R[26]
+reg Y[1, word] alias = R[28]
+reg Z[1, word] alias = R[30]
+reg PC[1, word] pc = 1
+reg SP[1, word]
+
+
+// status register
+reg SREG[1, byte]
+reg SREG_I[1, bit] alias = SREG<7..7>
+reg SREG_T[1, bit] alias = SREG<6..6>
+reg SREG_H[1, bit] alias = SREG<5..5>
+reg SREG_S[1, bit] alias = SREG<4..4>
+reg SREG_V[1, bit] alias = SREG<3..3>
+reg SREG_N[1, bit] alias = SREG<2..2>
+reg SREG_Z[1, bit] alias = SREG<1..1>
+reg SREG_C[1, bit] alias = SREG<0..0>
+
+
+// memories
+
+// separated structure
+//		flash -- 0x0000-0x3FFF
+//		SRAM  -- 0x0000-0x08FF
+//			32 registers			0x0000-0x001F
+//			64 I/O registers 		0x0020-0x005F
+//			160 Ext I/O registers	0x0060-0x00FF
+//			Internal SRAM			0x0100-0x08FF
+
+mem M[16, byte] data_memory = 1
+mem M16[16, word] alias = M[0]
+mem FLASH[17, byte] program_memory = 1
+
+macro store(a, x) = if a < 32 then R[a] = x; else M[a] = x; endif
+macro load(x, a) = if a < 32 then x = R[a]; else x = M[a]; endif
 
 op init()
 	action = {
@@ -43,6 +91,7 @@ op all_inst16 =
 	| RCALL | RET | RJMP
 	| IN
 	| ST | STD_Y | LDD_Y
+	| LSL | LSR | ROL | ROR | ASR | SWAP | BLD | BST | BSET | BCLR
 
 op inst32(x: all_inst32)
 	syntax = x.syntax
@@ -51,7 +100,3 @@ op inst32(x: all_inst32)
 
 op all_inst32 =
 	  LDS | STS 
-
-
-
-
