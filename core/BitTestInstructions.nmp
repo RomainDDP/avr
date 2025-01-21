@@ -126,3 +126,115 @@ op BCLR(s: card(3))
     action = {
         SREG<s..s> = 0;
     }
+
+op SEC()
+    syntax = format("SEC")
+    image = format("1001 0100 0000 1000")
+    action = {
+        SREG_C = 1;
+    }
+
+op CLC()
+    syntax = format("CLC")
+    image = format("1001 0100 1000 1000")
+    action = {
+        SREG_C = 0;
+    }
+
+op SEN()
+    syntax = format("SEN")
+    image = format("1001 0100 0010 1000")
+    action = {
+        SREG_N = 1;
+    }
+
+op CLN()
+    syntax = format("CLN")
+    image = format("1001 0100 1010 1000")
+    action = {
+        SREG_N = 0;
+    }
+
+op SEZ()
+    syntax = format("SEZ")
+    image = format("1001 0100 0001 1000")
+    action = {
+        SREG_Z = 1;
+    }
+
+op CLZ()
+    syntax = format("CLZ")
+    image = format("1001 0100 1001 1000")
+    action = {
+        SREG_Z = 0;
+    }
+
+op SEI()
+    syntax = format("SEI")
+    image = format("1001 0100 0111 1000")
+    action = {
+        SREG<7..7> = 1;
+    }
+
+op CLI()
+    syntax = format("CLI")
+    image = format("1001 0100 1111 1000")
+    action = {
+        SREG<7..7> = 0;
+    }
+
+op SES()
+    syntax = format("SES")
+    image = format("1001 0100 0100 1000")
+    action = {
+        SREG_S = 1;
+    }
+
+op CLS()
+    syntax = format("CLS")
+    image = format("1001 0100 1100 1000")
+    action = {
+        SREG_S = 0;
+    }
+
+op SEV()
+    syntax = format("SEV")
+    image = format("1001 0100 0011 1000")
+    action = {
+        SREG_V = 1;
+    }
+
+op CLV()
+    syntax = format("CLV")
+    image = format("1001 0100 1011 1000")
+    action = {
+        SREG_V = 0;
+    }
+
+op SET()
+    syntax = format("SET")
+    image = format("1001 0100 0110 1000")
+    action = {
+        SREG_T = 1;
+    }
+
+op CLT()
+    syntax = format("CLT")
+    image = format("1001 0100 1110 1000")
+    action = {
+        SREG_T = 0;
+    }
+
+op SEH()
+    syntax = format("SEH")
+    image = format("1001 0100 0101 1000")
+    action = {
+        SREG_H = 1;
+    }
+
+op CLH()
+    syntax = format("CLH")
+    image = format("1001 0100 1101 1000")
+    action = {
+        SREG_H = 0;
+    }
