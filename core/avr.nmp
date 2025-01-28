@@ -41,9 +41,7 @@ op inst16(x: all_inst16)
 	action = {  PC = PC + 2; x.action; }
 
 op all_inst16 =
-	 LSL | LSR | ROL | ROR | ASR | SWAP | BLD | BST | BSET
-	| BCLR |SEC |CLC|SEN|CLN|SEZ|CLZ |SEI|CLI|SES|CLS|SEV|CLV|SET
-	|CLT|SEH|CLH|SBI|CBI
+	 LSL|LSR|ROL|ROR|ASR|SWAP|BLD|BST|SEC|CLC|SEN|CLN|SEZ|CLZ|SEI|CLI|SES|CLS|SEV|CLV|SET|CLT|SEH|CLH|SBI|CBI //bit instructions
 
 //op inst32(x: all_inst32)
 //	syntax = x.syntax
