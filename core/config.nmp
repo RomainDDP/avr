@@ -29,6 +29,8 @@ reg Z[1, word] alias = R[30]
 reg PC[1, word] pc = 1
 reg SP[1, word]
 
+//register IO
+reg IO[64, byte]
 
 // status register
 reg SREG[1, byte]
@@ -56,8 +58,30 @@ mem M[16, byte] data_memory = 1
 mem M16[16, word] alias = M[0]
 mem FLASH[17, byte] program_memory = 1
 
-macro store(a, x) = if a < 32 then R[a] = x; else M[a] = x; endif
-macro load(x, a) = if a < 32 then x = R[a]; else x = M[a]; endif
+
+//MMU
+
+macro store(a, x) = 	if a < 0x0020 then 		//store in register
+							R[a] = x; 
+						
+						else
+							if a < 0x0060 then 	//store in io register
+								IO[a - 0x0020] = x;
+							else				//store in RAM
+								M[a - 0x0060] = x;
+							endif
+						endif
+
+
+macro load(x, a) = 		if a < 0x0020 then 		//register access
+							x = R[a];
+						else 
+							if a < 0x0060 then 	//register IO access
+								x = IO[a - 0x0020];
+							else				//RAM access
+								x = M[a - 0x0060];
+						  	endif
+						endif
 
 op init()
 	action = {
