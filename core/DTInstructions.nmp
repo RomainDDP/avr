@@ -13,44 +13,99 @@ include "config.nmp"
 
 ////// Data Transfer Instructions //////
 
-op LDI(d: rindex, k: card(8))
-	syntax = format("LDI R%d, 0x%02x ; %d", 16 + d, k, k)
-	image = format("1110 %4b %4b %4b", k<7..4>, d, k<3..0>)
+op LDI(d: card(4), k: card(8))
+	syntax = format("LDI R%d, 0x%02x ; %d", 16 + d, k)
+	image = format("1110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
 	action = {
 		R[d + 16] = k;
 	}
 
 op LDS(d: rindex, k: card(16))
 	syntax = format("LDS R%d, 0x%04x", d, k)
-	image = format("1001 000 %5b 0000 %16b", d, k)
+	image = format("1001 000%1b %4b 0000 %16b", d<4..4>, d<3..0>, k<15..0>)
 	action = {
 		load(R[d], k);
 	}
 
-op LDD_Y = LDD_Y_ii | LDD_Y_iii | LDD_Y_iv
-
-op LDD_Y_ii(d: rindex)
-	syntax = format("LD R%d, Y+", d)
-	image = format("1001 000 %5b 1001", d)
+op MOV(d: rindex, r: rindex)
+	syntax = format("MOV R%d, R%d", d, r)
+	image = format("0010 11%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
 	action = {
-		load(R[d], Y);
-		Y = Y + 1;
+		R[d] = R[r];
 	}
 
-op LDD_Y_iii(d: rindex)
+op MOVW(d: card(4), r: card(4))
+	syntax = format("MOVW R%d:%d, R%d:%d", d+1, d, r+1, r)
+	image = format("0000 0001 %4b %4b", d<3..0>, d<3..0>)
+	action = {
+		R[d] = R[r];
+		R[d+1] = R[r + 1];
+	}
+
+//LOAD indirect X pointer
+
+op LD_X(d : rindex)
+	syntax = format("LD R%d, X", d)
+	image = format("1001 000%1b %4b 1100", d<4..4>, d<3..0>)
+	action = {
+		load(R[d], X[0]);
+	}
+
+//post incrementation LD R[d], X+
+op LD_X_pi(d: rindex)
+	syntax = format("LD R%d, X+", d)
+	image = format("1001 000%1b %4b 1101", d<4..4>, d<3..0>)
+	action = {
+		load(R[d], X[0]);
+		X[0] = X[0] + 1;
+	}
+
+//pre decrementation LD R[d], -X
+op LD_X_pd(d: rindex)
+	syntax = format("LD R%d, -X", d)
+	image = format("1001 000%1b %4b 1110", d<4..4>, d<3..0>)
+	action = {
+		X[0] = X[0] - 1;
+		load(R[d], X[0]);
+	}
+
+
+//LOAD indirect Y pointer
+
+op LD_Y(d:rindex)
+	syntax = format("LD R%d, Y", d)
+	image = format("1000 000%1b %4b 1000", d<4..4>, d<3..0>)
+	action = {
+		load(R[d], Y[0]);
+	}
+
+op LD_Y_pi(d:rindex)
+	syntax = format("LD R%d, Y+")
+	image = format("1001 000%1b %4b 1001", d<4..4>, d<3..0>)
+	action = {
+		load(R[r], Y[0]);
+		Y[0] = Y[0] + 1;
+	}
+
+op LD_Y_pd(d:rindex)
 	syntax = format("LD R%d, -Y", d)
-	image = format("1001 000 %5b 1010", d)
+	image = format("1001 000%1b %4b 1010", d<4..4>, d<3..0>)
 	action = {
-		Y = Y - 1;
-		load(R[d], Y);
+		Y[0] = Y[0] - 1;
+		load(R[d], Y[0]);
 	}
 
-op LDD_Y_iv(d: rindex, q: card(6))
+op LDD_Y(d:rindex, q: card(6))
 	syntax = format("LDD R%d, Y+%d", d, q)
-	image = format("10%1b0 %2b0 %5b 1%3b", q<5..5>, q<4..3>, d, q<2..0>)
+	format = format("10%1b0 %2b0%1b %4b 0%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
 	action = {
-		load(R[d], Y + q);
+		load(R[d], Y[0] + q);
 	}
+
+
+
+
+
 
 op STS(d: rindex, k: card(16))
 	syntax = format("STS 0x%04x, R%d", k, d)
