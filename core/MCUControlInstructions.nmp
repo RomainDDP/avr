@@ -8,6 +8,5 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "config.nmp"
 
 // MCU Control Instructions 

@@ -29,6 +29,9 @@ reg Z[1, word] alias = R[30]
 reg PC[1, word] pc = 1
 reg SP[1, word]
 
+//registers IO
+reg IO[64, byte]
+
 
 // status register
 reg SREG[1, byte]
