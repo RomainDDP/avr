@@ -8,13 +8,13 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "config.nmp"
 
 
 ////// Data Transfer Instructions //////
 
+
 op LDI(d: card(4), k: card(8))
-	syntax = format("LDI R%d, 0x%02x ; %d", 16 + d, k)
+	syntax = format("LDI R%d, %d", d+16, k)
 	image = format("1110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
 	action = {
 		R[d + 16] = k;
@@ -33,22 +33,22 @@ op MOV(d: rindex, r: rindex)
 	action = {
 		R[d] = R[r];
 	}
-
+	
 op MOVW(d: card(4), r: card(4))
 	syntax = format("MOVW R%d:%d, R%d:%d", d+1, d, r+1, r)
-	image = format("0000 0001 %4b %4b", d<3..0>, d<3..0>)
+	image = format("0000 0001 %4b %4b", d<3..0>, r<3..0>)
 	action = {
+		assert (d % 2 != 0 || r % 2 != 0);
 		R[d] = R[r];
-		R[d+1] = R[r + 1];
+		R[d+1] = R[r+1];
 	}
 
 //LOAD indirect X pointer
-
 op LD_X(d : rindex)
 	syntax = format("LD R%d, X", d)
 	image = format("1001 000%1b %4b 1100", d<4..4>, d<3..0>)
 	action = {
-		load(R[d], X[0]);
+		load(R[d], X);
 	}
 
 //post incrementation LD R[d], X+
@@ -56,8 +56,8 @@ op LD_X_pi(d: rindex)
 	syntax = format("LD R%d, X+", d)
 	image = format("1001 000%1b %4b 1101", d<4..4>, d<3..0>)
 	action = {
-		load(R[d], X[0]);
-		X[0] = X[0] + 1;
+		load(R[d], X);
+		X = X + 2;
 	}
 
 //pre decrementation LD R[d], -X
@@ -65,124 +65,70 @@ op LD_X_pd(d: rindex)
 	syntax = format("LD R%d, -X", d)
 	image = format("1001 000%1b %4b 1110", d<4..4>, d<3..0>)
 	action = {
-		X[0] = X[0] - 1;
-		load(R[d], X[0]);
+		X = X - 2;
+		load(R[d], X);
 	}
 
 
 //LOAD indirect Y pointer
 
-op LD_Y(d:rindex)
-	syntax = format("LD R%d, Y", d)
-	image = format("1000 000%1b %4b 1000", d<4..4>, d<3..0>)
-	action = {
-		load(R[d], Y[0]);
-	}
+//op LD_Y(d:rindex)
+//	syntax = format("LD R%d, Y", d)
+//	image = format("1000 000%1b %4b 1000", d<4..4>, d<3..0>)
+//	action = {
+//		load(R[d], Y);
+//	}
 
 op LD_Y_pi(d:rindex)
-	syntax = format("LD R%d, Y+")
+	syntax = format("LD R%d, Y+", d)
 	image = format("1001 000%1b %4b 1001", d<4..4>, d<3..0>)
 	action = {
-		load(R[r], Y[0]);
-		Y[0] = Y[0] + 1;
+		load(R[d], Y);
+		Y = Y + 2;
 	}
 
 op LD_Y_pd(d:rindex)
 	syntax = format("LD R%d, -Y", d)
 	image = format("1001 000%1b %4b 1010", d<4..4>, d<3..0>)
 	action = {
-		Y[0] = Y[0] - 1;
-		load(R[d], Y[0]);
+		Y = Y - 2;
+		load(R[d], Y);
 	}
 
 op LDD_Y(d:rindex, q: card(6))
 	syntax = format("LDD R%d, Y+%d", d, q)
-	format = format("10%1b0 %2b0%1b %4b 0%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
+	image = format("10%1b0 %2b0%1b %4b 1%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
 	action = {
-		load(R[d], Y[0] + q);
+		load(R[d], Y + q);
 	}
 
-
-
-
-
-
-op STS(d: rindex, k: card(16))
-	syntax = format("STS 0x%04x, R%d", k, d)
-	image = format("1001 001 %5b 0000 %16b", d, k)
+//op LD_Z(d: card(5))
+//	syntax = format("LD R%d, Z", d)
+//	image = format("1000 000%1b %4b 0000", d<4..4>, d<3..0>)
+//	action = {
+//		load(R[d], Z);
+//	}
+	
+op LD_Z_pi(d: card(5))
+	syntax = format("LD R%d, Z+", d)
+	image = format("1001 000%1b %4b 0001", d<4..4>, d<3..0>)
 	action = {
-		store(k, R[d]);
+		load(R[d], Z);
+		Z = Z + 2;
 	}
 
-op ST = ST_i | ST_ii | ST_iii
-
-op ST_i(r: rindex)
-	syntax = format("ST X, R%d", r)
-	image = format("1001 001 %5b 1100", r)
+op LD_Z_pd(d: card(5))
+	syntax = format("LD R%d, -Z", d)
+	image = format("1001 000%1b %4b 0010", d<4..4>, d<3..0>)
 	action = {
-		store(X, R[r]);
+		Z = Z - 2;
+		load(R[d], Z);
 	}
 
-op ST_ii(r: rindex)
-	syntax = format("ST X+, R%d", r)
-	image = format("1001 001 %5b 1101", r)
+op LDD_Z(d: card(5), q: card(6))
+	syntax = format("LDD R%d, Z+%d", d, q)
+	image = format("10%1b0 %2b0%1b %4b 0%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
 	action = {
-		store(X, R[r]);
-		X = X + 1;
+		load(R[d], Z + q);
 	}
 
-op ST_iii(r: rindex)
-	syntax = format("ST -X, R%d", r)
-	image = format("1001 001 %5b 1110", r)
-	action = {
-		X = X - 1;
-		store(X, R[r]);
-	}
-
-op STD_Y = STD_Y_ii | STD_Y_iii | STD_Y_iv
-
-op STD_Y_ii(r: rindex)
-	syntax = format("ST Y+, R%d", r)
-	image = format("1001 001 %5b 1001", r)
-	action = {
-		store(Y, R[r]);
-		Y = Y + 1;
-	}
-
-op STD_Y_iii(r: rindex)
-	syntax = format("ST -Y, R%d", r)
-	image = format("1001 001 %5b 1010", r)
-	action = {
-		Y = Y - 1;
-		store(Y, R[r]);
-	}
-
-op STD_Y_iv(r: rindex, q: card(6))
-	syntax = format("STD Y+%d, R%d", q, r)
-	image = format("10%1b0 %2b1 %5b 1%3b", q<5..5>, q<4..3>, r, q<2..0>)
-	action = {
-		store(Y + q, R[r]);
-	}
-
-op IN(A: card(6), d: rindex)
-	syntax = format("IN R%d, 0x%02x", d, A)
-	image = format("1011 0%2b %5b %4b", A<5..4>, d, A<3..0>)
-	action = {
-		load(R[d], A + 0x20);
-	}
-
-op PUSH(d: rindex)
-	syntax = format("PUSH R%d", d)
-	image = format("1001 001 %5b 1111", d)
-	action = {
-		M[SP] = R[d];
-		SP = SP - 1;
-	}
-
-op POP(d: rindex)
-	syntax = format("POP R%d", d)
-	image = format("1001 000 %5b 1111", d)
-	action = {
-		SP = SP + 1;
-		R[d] = M[SP];
-	}

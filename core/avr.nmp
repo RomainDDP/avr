@@ -8,8 +8,9 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "ALInstructions.nmp"
-include "CFInstructions.nmp"
+include "config.nmp"
+include "DTInstructions.nmp"
+
 
 op init()
 	action = {
@@ -29,7 +30,7 @@ op instruction(x: all)
 	action = {  x.action; }
 
 op all =
-	inst16 | inst32
+	inst16
 
 op inst16(x: all_inst16)
 	syntax = x.syntax
@@ -37,20 +38,15 @@ op inst16(x: all_inst16)
 	action = {  PC = PC + 2; x.action; }
 
 op all_inst16 =
-	  ADC | ADD | ADIW | CPC | CPI | LDI | SBIW
-	| POP | PUSH
-	| BRLT | BRNE
-	| RCALL | RET | RJMP
-	| IN
-	| ST | STD_Y | LDD_Y
+	LDI | MOV | MOVW | LD_X | LD_X_pi | LD_X_pd | LD_Y | LD_Y_pi | LD_Y_pd | LDD_Y | LD_Z | LD_Z_pi | LD_Z_pd | LDD_Z
 
-op inst32(x: all_inst32)
-	syntax = x.syntax
-	image = x.image
-	action = {  PC = PC + 4; x.action; }
+//op inst32(x: all_inst32)
+//	syntax = x.syntax
+//	image = x.image
+//	action = {  PC = PC + 4; x.action; }
 
-op all_inst32 =
-	  LDS | STS 
+//op all_inst32 =
+//	  LDS
 
 
 

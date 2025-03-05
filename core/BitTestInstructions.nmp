@@ -8,6 +8,4 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "config.nmp"
-
 // Bit and Bit-Test Instructions 

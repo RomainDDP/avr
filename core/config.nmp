@@ -61,36 +61,25 @@ mem FLASH[17, byte] program_memory = 1
 
 //MMU
 
-macro store(a, x) = 	if a < 0x0020 then 		//store in register
-							R[a] = x; 
-						
-						else
-							if a < 0x0060 then 	//store in io register
-								IO[a - 0x0020] = x;
-							else				//store in RAM
-								M[a - 0x0060] = x;
-							endif
-						endif
+macro store(a, x) = 			\
+	if (a < 0x0020) then		\
+		R[a] = x; 				\
+	else 						\
+		if (a < 0x0060) then 	\
+			IO[a - 0x0020] = x; \
+		else					\
+			M[a - 0x0060] = x;	\
+		endif;					\
+	endif;			
 
 
-macro load(x, a) = 		if a < 0x0020 then 		//register access
-							x = R[a];
-						else 
-							if a < 0x0060 then 	//register IO access
-								x = IO[a - 0x0020];
-							else				//RAM access
-								x = M[a - 0x0060];
-						  	endif
-						endif
-
-op init()
-	action = {
-
-		// set SP
-		SP = RAMEND;
-		M[0x3D + 0x20] = RAMEND<7..0>;
-		M[0x3E + 0x20] = RAMEND<15..8>;
-
-		// set PC
-		PC = 0;
-	}
+macro load(x, a) =				\
+	if (a < 0x0020) then 		\
+		x = R[a]; 				\
+	else 						\
+		if (a < 0x0060) then 	\
+			x = IO[a - 0x0020]; \ 
+		else 					\
+			x = M[a - 0x0060]; 	\
+		endif; 					\
+	endif;			

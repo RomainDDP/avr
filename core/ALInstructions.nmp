@@ -8,8 +8,6 @@ let COPYRIGHT = "University of Toulouse"
 let YEAR = "2019"
 let URL = ""
 
-include "config.nmp"
-
 
 ////// Arithmetic and Logic Instructions //////
 
