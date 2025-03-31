@@ -215,3 +215,19 @@ op OUT(d: card(5), a: card(6))
 	action = {
 		IO[a] = R[d];
 	}
+
+op PUSH(d: card(5))
+	syntax = format("PUSH R%d", d)
+	image = format("1001 001%1b %4b 1111", d<4..4>, d<3..0>)
+	action = {
+		store(SP, R[d]);
+		SP = SP - 1;
+	}
+
+op POP(d: card(5))
+	syntax = format("POP R%d", d)
+	image = format("1001 000%1b %4b 1111", d<4..4>, d<3..0>)
+	action = action {
+		SP = SP + 1;
+		load(R[d], SP);
+	}
