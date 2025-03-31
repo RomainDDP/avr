@@ -70,8 +70,7 @@ op LD_X_pd(d: rindex)
 	}
 
 
-//LOAD indirect Y pointer
-
+//LOAD indirect Y pointe
 //op LD_Y(d:rindex)
 //	syntax = format("LD R%d, Y", d)
 //	image = format("1000 000%1b %4b 1000", d<4..4>, d<3..0>)
@@ -132,3 +131,87 @@ op LDD_Z(d: card(5), q: card(6))
 		load(R[d], Z + q);
 	}
 
+op ST_X(d: card(5))
+	syntax = format("ST X, R%d", d)
+	image = format("1001 001%1b %4b 1100", d<4..4>, d<3..0>)
+	action = {
+		store(X, R[d]);
+	}
+
+op ST_Xpi(d: card(5))
+	syntax = format("ST X+, R%d", d)
+	image = format("1001 001%1b %4b 1101", d<4..4>, d<3..0>)
+	action = {
+		store(X, R[d]);
+		X = X + 2;
+	}
+
+op ST_Xpd(d: card(5))
+	syntax = format("ST -X, R%d", d)
+	image = format("1001 001%1b %4b 1110", d<4..4>, d<3..0>)
+	action = {
+		X = X - 2;
+		store(X, R[d]);
+	}
+
+
+op STD_Y(d: card(5), q: card(6))
+	syntax = format("STD Y+%d, R%d", q, d)
+	image = format("10%1b0 %2b1%1b %4b 1%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
+	action = {
+		store(Y + q, R[d]);
+	}
+
+op ST_Ypi(d: card(5))
+	syntax = format("ST Y+, R%d", d)
+	image = format("1001 001%1b %4b 1001", d<4..4>, d<3..0>)
+	action = {
+		store(Y, R[d]);
+		Y = Y + 2;
+	}
+
+op ST_Ypd(d: card(5))
+	syntax = format("ST -Y, R%d", d)
+	image = format("1001 001%1b %4b 1010", d<4..4>, d<3..0>)
+	action = {
+		Y = Y - 2;
+		store(Y, R[d]);
+	}
+
+op STD_Z(d: card(5), q: card(6))
+	syntax = format("STD Z+%d, R%d", q, d)
+	image = format("10%1b0 %2b1%1b %4b 0%3b", q<5..5>, q<4..3>, d<4..4>, d<3..0>, q<2..0>)
+	action = {
+		store(Z + q, R[d]);
+	}
+
+op ST_Zpi(d: card(5))
+	syntax = format("ST Z+, R%d", d)
+	image = format("1001 001%1b %4b 0001", d<4..4>, d<3..0>)
+	action = {
+		store(Z, R[d]);
+		Z = Z + 2;
+	}
+
+op ST_Zpd(d: card(5))
+	syntax = format("ST -Z, R%d", d)
+	image = format("1001 001%1b %4b 0010", d<4..4>, d<3..0>)
+	action = {
+		Z = Z - 2;
+		store(Z, R[d]);
+	}
+
+
+op IN(d : card(5), a: card(6))
+	syntax = format("IN R%d, %d", d, a)
+	image = format("1011 0%2b%1b %4b %4b", a<5..4>, d<4..4>, d<3..0>, a<3..0>)
+	action = {
+		R[d] = IO[a];
+	}
+
+op OUT(d: card(5), a: card(6))
+	syntax = format("OUT %d, R%d", a, d)
+	image = format("1011 1%2b%1b %4b %4b", a<5..4>, d<4..4>, d<3..0>, a<3..0>)
+	action = {
+		IO[a] = R[d];
+	}

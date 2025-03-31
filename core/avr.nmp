@@ -38,7 +38,7 @@ op inst16(x: all_inst16)
 	action = {  PC = PC + 2; x.action; }
 
 op all_inst16 =
-	LDI | MOV | MOVW | LD_X | LD_X_pi | LD_X_pd | LD_Y | LD_Y_pi | LD_Y_pd | LDD_Y | LD_Z | LD_Z_pi | LD_Z_pd | LDD_Z
+	LDI | MOV | MOVW | LD_X | LD_X_pi | LD_X_pd | LD_Y_pi | LD_Y_pd | LDD_Y | LD_Z_pi | LD_Z_pd | LDD_Z | ST_X | ST_Xpd | ST_Xpi | STD_Y | ST_Ypd | ST_Ypi | STD_Z | ST_Zpd | ST_Zpi | IN | OUT
 
 //op inst32(x: all_inst32)
 //	syntax = x.syntax
