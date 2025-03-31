@@ -9,3 +9,238 @@ let YEAR = "2019"
 let URL = ""
 
 // Bit and Bit-Test Instructions 
+
+//op LSL(d: card(5))
+//    syntax = format("LSL R%d", d)
+//    image = format("0000 11%5b", d<4..0>)
+//    action = {
+//        let dd: card(5) = d<4..0>;
+//        let R_ = R[dd] << 1;
+//        SREG_C = R[dd]<7..7>;
+//        SREG_Z = R_ == 0;
+//        SREG_N = R_<7..7>;
+//        SREG_V = SREG_N ^ SREG_C;
+//        SREG_S = SREG_N ^ SREG_V;
+//        SREG_H = R[dd]<3..3>;
+//
+//        R[dd] = R_;
+//    }
+
+op LSR(d: rindex)
+    syntax = format("LSR R%d", d)
+    image = format("1001 010%1b %4b 0110", d<4..4>, d<3..0>)
+    action = {
+        let R_ = R[d] >> 1;
+        SREG_C = R[d]<0..0>;
+        SREG_Z = R_ == 0;
+        SREG_N = 0;
+        SREG_V = SREG_N ^ SREG_C;
+        SREG_S = SREG_V ^ SREG_N;
+
+        R[d] = R_;
+    }
+
+op ROL(d: card(10))
+    syntax = format("ROL R%d", d)
+    image = format("0001 11%2b %4b %4b", d<9..8>, d<7..4>, d<3..0>)
+    action = {
+        let dd: card(5) = d<4..0>;
+        let value = R[dd];
+        let b7 = value<7..7>;
+        let R_ = (R[dd] << 1) | SREG_C; //SREG_C is the lower bit
+
+        SREG_C = b7;
+        SREG_Z = R_ == 0;
+        SREG_N = R_<7..7>;
+        SREG_V = SREG_N ^ SREG_C;
+        SREG_S = SREG_N ^ SREG_V;
+        SREG_H = R[dd]<3..3>;
+
+        R[dd] = R_;
+    }
+
+op ROR(d: rindex)
+    syntax = format("ROR R%d", d)
+    image = format("1001 010%1b %4b 0111", d<4..4>, d<3..0>)
+    action = {
+        let b0 = R[d]<0..0>;
+        let R_ = (R[d] >> 1) | (SREG_C << 7); //SREG_C is to upper bit to be set in the bit7 of the result
+
+        SREG_C = b0;
+        SREG_Z = R_ == 0;
+        SREG_N = R_<7..7>;
+        SREG_V = SREG_N ^ SREG_C;
+        SREG_S = SREG_N ^ SREG_V;
+
+        R[d] = R_;
+    }
+
+op ASR(d: rindex)
+    syntax = format("ASR R%d", d)
+    image = format("1001 010%1b %4b 0101", d<4..4>, d<3..0>)
+    action = {
+        let bit7 = R[d]<7..7>;
+        let R_ = (R[d] >> 1) | (bit7 << 7);
+
+        SREG_C = R[d]<0..0>;
+        SREG_Z = R_ == 0;
+        SREG_N = R_<7..7>;
+        SREG_V = SREG_C ^ SREG_N;
+        SREG_S = SREG_V ^ SREG_N;
+
+        R[d] = R_;
+    }
+
+op SWAP(d: rindex)
+    syntax = format("SWAP R%d", d)
+    image = format("1001 010%1b %4b 0010", d<4..4>, d<3..0>)
+    action = {
+        let R_ = ((R[d] & 0xF0) >> 4) | ((R[d] & 0xF) << 4);
+
+        R[d] = R_;
+    }
+
+op BLD(d: rindex, b: card(3))
+    syntax = format("BLD R%d, %d", d, b)
+    image = format("1111 100%1b %4b 0%3b", d<4..4>, d<3..0>, b<2..0>)
+    action = {
+        R[d]<b..b> = SREG_T;
+    }
+
+op BST(d: rindex, b:card(3))
+    syntax = format("BST R%d, %d", d, b)
+    image = format("1111 101%1b %4b 0%3b", d<4..4>, d<3..0>, b<2..0>)
+    action = {
+        SREG_T = R[d]<b..b>;
+    }
+
+//op BSET = 
+
+
+//op BCLR = 
+
+op SEC ()
+    syntax = "SEC"
+    image = "1001 0100 0000 1000"
+    action = {
+        SREG_C = 1;
+    }
+
+op CLC ()
+    syntax = "CLC"
+    image = "1001 0100 1000 1000"
+    action = {
+        SREG_C = 0;
+    }
+
+op SEN ()
+    syntax = "SEN"
+    image = "1001 0100 0010 1000"
+    action = {
+        SREG_N = 1;
+    }
+
+op CLN ()
+    syntax = "CLN"
+    image = "1001 0100 1010 1000"
+    action = {
+        SREG_N = 0;
+    }
+
+op SEZ ()
+    syntax = "SEZ"
+    image = "1001 0100 0001 1000"
+    action = {
+        SREG_Z = 1;
+    }
+
+op CLZ ()
+    syntax = "CLZ"
+    image = "1001 0100 1001 1000"
+    action = {
+        SREG_Z = 0;
+    }
+
+op SEI ()
+    syntax = "SEI"
+    image = "1001 0100 0111 1000"
+    action = {
+        SREG<7..7> = 1;
+    }
+
+op CLI ()
+    syntax = "CLI"
+    image = "1001 0100 1111 1000"
+    action = {
+        SREG<7..7> = 0;
+    }
+
+op SES ()
+    syntax = "SES"
+    image = "1001 0100 0100 1000"
+    action = {
+        SREG_S = 1;
+    }
+
+op CLS ()
+    syntax = "CLS"
+    image = "1001 0100 1100 1000"
+    action = {
+        SREG_S = 0;
+    }
+
+op SEV ()
+    syntax = "SEV"
+    image = "1001 0100 0011 1000"
+    action = {
+        SREG_V = 1;
+    }
+
+op CLV ()
+    syntax = "CLV"
+    image = "1001 0100 1011 1000"
+    action = {
+        SREG_V = 0;
+    }
+
+op SET ()
+    syntax = "SET"
+    image = "1001 0100 0110 1000"
+    action = {
+        SREG_T = 1;
+    }
+
+op CLT ()
+    syntax = "CLT"
+    image = "1001 0100 1110 1000"
+    action = {
+        SREG_T = 0;
+    }
+
+op SEH ()
+    syntax = "SEH"
+    image = "1001 0100 0101 1000"
+    action = {
+        SREG_H = 1;
+    }
+
+op CLH ()
+    syntax = "CLH"
+    image = "1001 0100 1101 1000"
+    action = {
+        SREG_H = 0;
+    }
+
+op SBI(a: rindex, b: card(3))
+    syntax = format("SBI IO%d, %d", a, b)
+    image = format("1001 1010 %4b %1b%3b", a<4..1>, a<0..0>, b<2..0>)
+    action = {
+        IO[a]<b..b> = 1;
+    }
+
+op CBI(a: rindex, b: card(3))
+    syntax = format("CBI IO%d, %d", a, b)
+    image = format("1001 1000 %4b %1b%3b", a<4..1>, a<0..0>, b<2..0>)
+    action = {
+        IO[a]<b..b> = 0;
+    }
