@@ -37,7 +37,8 @@ GFLAGS += -D \
 	-m mem:$(MEMORY) \
 	-m loader:$(LOADER) \
 	-m env:void_env \
-	-m code:code
+	-m code:code \
+	-config extern/config.tpl
 
 NMP_MAIN = $(ARCH).nmp
 NMP = $(NMP_MAIN)
@@ -81,11 +82,11 @@ only-clean:
 
 HOST_ENDIAN = $(shell python3 -c "import sys; print(sys.byteorder)")
 
-include/$(ARCH)/config.h: extern/config.tpl
-	test -d include/$(ARCH) || mkdir include/$(ARCH)
-	cp extern/config.tpl $@
-	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" >> $@
-	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
+#include/$(ARCH)/config.h: extern/config.tpl
+#	test -d include/$(ARCH) || mkdir include/$(ARCH)
+#	cp extern/config.tpl $@
+#	echo "#define TARGET_ENDIANNESS $(TARGET_ENDIAN)" >> $@
+#	echo "#define HOST_ENDIANNESS $(HOST_ENDIAN)" >> $@
 
 config: config.mk
 

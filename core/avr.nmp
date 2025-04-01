@@ -34,7 +34,7 @@ op instruction(x: all)
 
 op all =
 	inst16 
-	//|inst32
+	|inst32
 
 op inst16(x: all_inst16)
 	syntax = x.syntax
@@ -45,10 +45,10 @@ op all_inst16 =
 	LDI|MOV|MOVW|LD_X|LD_X_pi|LD_X_pd|LD_Y_pi|LD_Y_pd|LDD_Y|LD_Z_pi|LD_Z_pd|LDD_Z|ST_X|ST_Xpd|ST_Xpi|STD_Y|ST_Ypd|ST_Ypi|STD_Z|ST_Zpd|ST_Zpi|IN|OUT|PUSH|POP|XCH|LAS|LAT|LAC|LPM|LPM_D|LPM_DP
 	|LSR|ROL|ROR|ASR|SWAP|BLD|BST|SEC|CLC|SEN|CLN|SEZ|CLZ|SEI|CLI|SES|CLS|SEV|CLV|SET|CLT|SEH|CLH|SBI|CBI
 
-//op inst32(x: all_inst32)
-//	syntax = x.syntax
-//	image = x.image
-//	action = {  PC = PC + 4; x.action; }
-//
-//op all_inst32 =
-//	  LDS | STS
+op inst32(x: all_inst32)
+	syntax = x.syntax
+	image = x.image
+	action = {  PC = PC + 4; x.action; }
+
+op all_inst32 =
+	  LDS | STS
