@@ -12,6 +12,9 @@ let URL = ""
 
 ////// Data Transfer Instructions //////
 
+//LPM, LDD, LD, ST, it's +1 or -1 to Z, Y, X because data memory is 1word indexed
+//SPM it's +2 to Z because FLASH memory is 2words indexed
+//NO NEED SPM and ELPM because with have no extended memory and extended IO registers
 
 op LDI(d: card(4), k: card(8))
 	syntax = format("LDI R%d, %d", d+16, k)
@@ -57,7 +60,7 @@ op LD_X_pi(d: rindex)
 	image = format("1001 000%1b %4b 1101", d<4..4>, d<3..0>)
 	action = {
 		load(R[d], X);
-		X = X + 2;
+		X = X + 1;
 	}
 
 //pre decrementation LD R[d], -X
@@ -65,7 +68,7 @@ op LD_X_pd(d: rindex)
 	syntax = format("LD R%d, -X", d)
 	image = format("1001 000%1b %4b 1110", d<4..4>, d<3..0>)
 	action = {
-		X = X - 2;
+		X = X - 1;
 		load(R[d], X);
 	}
 
@@ -83,14 +86,14 @@ op LD_Y_pi(d:rindex)
 	image = format("1001 000%1b %4b 1001", d<4..4>, d<3..0>)
 	action = {
 		load(R[d], Y);
-		Y = Y + 2;
+		Y = Y + 1;
 	}
 
 op LD_Y_pd(d:rindex)
 	syntax = format("LD R%d, -Y", d)
 	image = format("1001 000%1b %4b 1010", d<4..4>, d<3..0>)
 	action = {
-		Y = Y - 2;
+		Y = Y - 1;
 		load(R[d], Y);
 	}
 
@@ -113,14 +116,14 @@ op LD_Z_pi(d: card(5))
 	image = format("1001 000%1b %4b 0001", d<4..4>, d<3..0>)
 	action = {
 		load(R[d], Z);
-		Z = Z + 2;
+		Z = Z + 1;
 	}
 
 op LD_Z_pd(d: card(5))
 	syntax = format("LD R%d, -Z", d)
 	image = format("1001 000%1b %4b 0010", d<4..4>, d<3..0>)
 	action = {
-		Z = Z - 2;
+		Z = Z - 1;
 		load(R[d], Z);
 	}
 
@@ -143,14 +146,14 @@ op ST_Xpi(d: card(5))
 	image = format("1001 001%1b %4b 1101", d<4..4>, d<3..0>)
 	action = {
 		store(X, R[d]);
-		X = X + 2;
+		X = X + 1;
 	}
 
 op ST_Xpd(d: card(5))
 	syntax = format("ST -X, R%d", d)
 	image = format("1001 001%1b %4b 1110", d<4..4>, d<3..0>)
 	action = {
-		X = X - 2;
+		X = X - 1;
 		store(X, R[d]);
 	}
 
@@ -167,14 +170,14 @@ op ST_Ypi(d: card(5))
 	image = format("1001 001%1b %4b 1001", d<4..4>, d<3..0>)
 	action = {
 		store(Y, R[d]);
-		Y = Y + 2;
+		Y = Y + 1;
 	}
 
 op ST_Ypd(d: card(5))
 	syntax = format("ST -Y, R%d", d)
 	image = format("1001 001%1b %4b 1010", d<4..4>, d<3..0>)
 	action = {
-		Y = Y - 2;
+		Y = Y - 1;
 		store(Y, R[d]);
 	}
 
@@ -190,14 +193,14 @@ op ST_Zpi(d: card(5))
 	image = format("1001 001%1b %4b 0001", d<4..4>, d<3..0>)
 	action = {
 		store(Z, R[d]);
-		Z = Z + 2;
+		Z = Z + 1;
 	}
 
 op ST_Zpd(d: card(5))
 	syntax = format("ST -Z, R%d", d)
 	image = format("1001 001%1b %4b 0010", d<4..4>, d<3..0>)
 	action = {
-		Z = Z - 2;
+		Z = Z - 1;
 		store(Z, R[d]);
 	}
 
@@ -237,4 +240,82 @@ op STS(d: card(5), a : card(16))
 	image = format("1001 001%1b %4b 0000 %4b %4b %4b %4b", d<4..4>, d<3..0>, a<15..12>, a<11..8>, a<7..4>, a<3..0>)
 	action = {
 		store(a, R[d]);
+	}
+
+op XCH(d: card(5))
+	syntax = format("XCH Z, R%d", d)
+	image = format("1001 001%1b %4b 0100", d<4..4>, d<3..0>)
+	action = {
+		let tmp : card(8) = 0;
+		load(Z, tmp);
+		store(Z, R[d]);
+		R[d] = tmp;
+	}
+
+op LAS(d: card(5))
+	syntax = format("LAS Z, R%d", d)
+	image = format("1001 001%1b %4b 0101", d<4..4>, d<3..0>)
+	action = {
+		let tmp : card(8) = 0;
+		load(tmp, Z);
+		let data : card(8) = R[d] | tmp;
+		R[d] = tmp;
+		store(Z, data);
+	}
+
+op LAT(d: card(5))
+	syntax = format("LAT Z, R%d", d)
+	image = format("1001 001%1b %4b 0111", d<4..4>, d<3..0>)
+	action = {
+		let tmp : card(8) = 0;
+		load(tmp, Z);
+		let data : card(8) = R[d] ^ tmp;
+		R[d] = tmp;
+		store(Z, data);
+	}
+
+op LAC(d: card(5))
+	syntax = format("LAC Z, R%d", d)
+	image = format("1001 001%1b %4b 0110", d<4..4>, d<3..0>)
+	action = {
+		let tmp : card(8) = 0;
+		load(tmp, Z);
+		let data : card(8) = (0xFF - R[d]) & tmp;
+		R[d] = tmp;
+		store(Z, data);
+	}
+
+op LPM()
+	syntax = "LPM"
+	image = "1001 0101 1100 1000"
+	action = {
+		if (Z<0..0> == 0) then
+			R[0] = (FLASH[Z] & 0x00FF);
+		else
+			R[0] = (FLASH[Z] & 0xFF00) >> 8;
+		endif;
+	}
+
+op LPM_D(d: card(5))
+	syntax = format("LPM R%d, Z", d)
+	image = format("1001 000%1b %4b 0100", d<4..4>, d<3..0>)
+	action = {
+		if (Z<0..0> == 0) then
+			R[d] = (FLASH[Z] & 0x00FF);
+		else
+			R[d] = (FLASH[Z] & 0xFF00) >> 8;
+		endif;
+	}
+
+op LPM_DP(d: card(5))
+	syntax = format("LPM R%d, Z+", d)
+	image = format("1001 000%1b %4b 0101", d<4..4>, d<3..0>)
+	action = {
+		if (Z<0..0> == 0) then
+			R[d] = (FLASH[Z] & 0x00FF);
+		else
+			R[d] = (FLASH[Z] & 0xFF00) >> 8;
+		endif;
+		
+		Z = Z + 1;
 	}
