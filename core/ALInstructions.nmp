@@ -16,11 +16,11 @@ let URL = ""
     image = format("0000 11%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
     action = {
       let R_ = R[d] + R[r];
-      SREG_C = (R[d]<7..7> && R[r]<7..7>) || (R[r]<7..7> && !R_<7..7>) || (!R_<7..7> && R[d]<7..7>);
+      SREG_C = (R[d]<7..7> & R[r]<7..7>) | (R[r]<7..7> & !R_<7..7>) | (!R_<7..7> & R[d]<7..7>);
       SREG_Z = R_ == 0;
-      SREG_V = (R[d]<7..7> && R[r]<7..7> && !R_<7..7>) || (!R[d]<7..7> && !R[r]<7..7> && R_<7..7>);
+      SREG_V = (R[d]<7..7> & R[r]<7..7> & !R_<7..7>) | (!R[d]<7..7> & !R[r]<7..7> & R_<7..7>);
       SREG_S = SREG_N ^ SREG_V;
-      SREG_H = (R[d]<3..3> && R[r]<3..3>) || (R[r]<3..3> && !R_<3..3>) || (!R_<3..3> && R[d]<3..3>);
+      SREG_H = (R[d]<3..3> & R[r]<3..3>) | (R[r]<3..3> & !R_<3..3>) | (!R_<3..3> & R[d]<3..3>);
       R[d] = R_;
     }
 
@@ -29,12 +29,12 @@ let URL = ""
     image = format("0001 11%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
     action = {
       let R_ = R[d] + R[r] + SREG_C;
-      SREG_C = (R[d]<7..7> && R[r]<7..7>) || (R[r]<7..7> && !R_<7..7>) || (!R_<7..7> && R[d]<7..7>);
+      SREG_C = (R[d]<7..7> & R[r]<7..7>) | (R[r]<7..7> & !R_<7..7>) | (!R_<7..7> & R[d]<7..7>);
       SREG_Z = R_ == 0;
       SREG_N = R_<7..7>;
-      SREG_V = (R[d]<7..7> && R[r]<7..7> && !R_<7..7>) || (!R[d]<7..7> && !R[r]<7..7> && R_<7..7>);
+      SREG_V = (R[d]<7..7> & R[r]<7..7> & !R_<7..7>) | (!R[d]<7..7> & !R[r]<7..7> & R_<7..7>);
       SREG_S = SREG_N ^ SREG_V;
-      SREG_H = (R[d]<3..3> && R[r]<3..3>) || (R[r]<3..3> && !R_<3..3>) || (!R_<3..3> && R[d]<3..3>);
+      SREG_H = (R[d]<3..3> & R[r]<3..3>) | (R[r]<3..3> & !R_<3..3>) | (!R_<3..3> & R[d]<3..3>);
       R[d] = R_;
     }
   
@@ -45,10 +45,10 @@ let URL = ""
     image = format("1001 0110 %2b%2b %4b", k<5..4>, d, k<3..0>)
     action = {
       let R_ = (R[dh]::R[dl]) + k;
-      SREG_V = !R[dh]<7..7> && R_<15..15>;
+      SREG_V = !R[dh]<7..7> & R_<15..15>;
       SREG_N = R_<15..15>;
       SREG_Z = R_ == 0;
-      SREG_C = !R_<15..15> && R[dh]<7..7>;
+      SREG_C = !R_<15..15> & R[dh]<7..7>;
       SREG_S = SREG_N ^ SREG_V;
       R[dh]::R[dl] = R_;
     }
@@ -58,28 +58,28 @@ let URL = ""
     image = format("0001 10%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
     action = {
         let R_ = R[d] - R[r];
-        SREG_H = (!R[d]<3..3> && R[r]<3..3>) || (R[r]<3..3> && R_<3..3>) || (R_<3..3> && R[d]<3..3>);
+        SREG_H = (!R[d]<3..3> & R[r]<3..3>) | (R[r]<3..3> & R_<3..3>) | (R_<3..3> & R[d]<3..3>);
         SREG_Z = R_ == 0;
         SREG_N = R_<7..7>;
-        SREG_V = (R[d]<7..7> && !R[r]<7..7> && R_<7..7>) || (!R[d]<7..7> && R[r]<7..7> && R_<7..7>);
+        SREG_V = (R[d]<7..7> & !R[r]<7..7> & R_<7..7>) | (!R[d]<7..7> & R[r]<7..7> & R_<7..7>);
         SREG_S = SREG_N ^ SREG_V;
-        SREG_C = (!R[d]<7..7> && R[r]<7..7>) || (R[r]<7..7> && R_<7..7>) || (R_<7..7> && !R[d]<7..7>);
+        SREG_C = (!R[d]<7..7> & R[r]<7..7>) | (R[r]<7..7> & R_<7..7>) | (R_<7..7> & !R[d]<7..7>);
         R[d] = R_;
       }
 
   op SUBI(d: card(4), k: card(8))
-    let dl = 16 + d
-    syntax = format("SUBI R%d, %d", dl, k)
+    syntax = format("SUBI R%d, %d", 16 + d, k)
     image = format("0101 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
     action = {
+      let dl = 16 + d;
         let R_ = R[dl] - k;
-        SREG_H = (!R[dl]<3..3> && k<3..3>) || (k<3..3> && R_<3..3>) || (R_<3..3> && !R[dl]<3..3>);
+        SREG_H = (!R[dl]<3..3> & k<3..3>) | (k<3..3> & R_<3..3>) | (R_<3..3> & !R[dl]<3..3>);
         SREG_N = R_<7..7>;
-        SREG_V = (R[dl]<7..7> && !k<7..7> && !R_<7..7>) || (R[dl]<7..7> && k<7..7> && R_<7..7>);
+        SREG_V = (R[dl]<7..7> & !k<7..7> & !R_<7..7>) | (R[dl]<7..7> & k<7..7> & R_<7..7>);
         SREG_S = SREG_N ^ SREG_V;
         SREG_Z = R_ == 0;
-        SREG_C = (!R[dl]<7..7> && k<7..7>) || (k<7..7> && R_<7..7>) || (R_<7..7> && !R[dl]<7..7>);
-        R[dl] = R_
+        SREG_C = (!R[dl]<7..7> & k<7..7>) | (k<7..7> & R_<7..7>) | (R_<7..7> & !R[dl]<7..7>);
+        R[dl] = R_;
       }
 
   op SBC(d: rindex, r: rindex)
@@ -88,31 +88,30 @@ let URL = ""
     action = {
       let R_ = R[d] - R[r] - SREG_C;
       SREG_N = R_<7..7>;
-      SREG_V = (R[d]<7..7> && !R[r]<7..7> && !R_<7..7>) || (R[d]<7..7> && R[r]<7..7> && R_<7..7>);
+      SREG_V = (R[d]<7..7> & !R[r]<7..7> & !R_<7..7>) | (R[d]<7..7> & R[r]<7..7> & R_<7..7>);
       SREG_S = SREG_N ^ SREG_V;
-      SREG_H = (!R[d]<3..3> && R[r]<3..3>) || (R[r]<3..3> && R_<3..3>) || (R_<3..3> && !R[d]<3..3>);
+      SREG_H = (!R[d]<3..3> & R[r]<3..3>) | (R[r]<3..3> & R_<3..3>) | (R_<3..3> & !R[d]<3..3>);
       
       let tmp_Z = R_ == 0;
-      SREG_Z = tmp_Z && SREG_Z;
-      SREG_C = (!R[d]<7..7> && R[r]<7..7>) || (R[r]<7..7> && R_<7..7>) || (R_<7..7> && R[d]<7..7>);
-      R[d] = R_
+      SREG_Z = tmp_Z & SREG_Z;
+      SREG_C = (!R[d]<7..7> & R[r]<7..7>) | (R[r]<7..7> & R_<7..7>) | (R_<7..7> & R[d]<7..7>);
+      R[d] = R_;
       }
 
   op SBCI(d: card(4), k: card(8))
-    dl = 16 + d
-    syntax = format("SBCI R%d, %d" dl, k)
+    syntax = format("SBCI R%d, %d", 16 + d, k)
     image = format("0100 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
     action = {
+        let dl = 16 + d;
         let R_ = R[dl] - k - SREG_C;
         SREG_N = R_<7..7>;
-        SREG_V = (R[dl]<7..7> && !k<7..7> && !R_<7..7>) || (!R[dl]<7..7> && k<7..7> && R_<7..7>);
+        SREG_V = (R[dl]<7..7> & !k<7..7> & !R_<7..7>) | (!R[dl]<7..7> & k<7..7> & R_<7..7>);
         SREG_S = SREG_N ^ SREG_V;
-        SREG_H = (!R[dl]<3..3> && k<3..3>) || (k<3..3> && R_<3..3>) || (R_<3..3> && !R[dl]<3..3>);
-        
+        SREG_H = (!R[dl]<3..3> & k<3..3>) | (k<3..3> & R_<3..3>) | (R_<3..3> & !R[dl]<3..3>);
         let tmp_Z = R_ == 0;
-        SREG_Z = tmp_Z && SREG_Z;
-        SREG_C = (!R[dl]<7..7> && k<7..7>) || (k<7..7> && R_<7..7>) || (R_<7..7> && R[dl]<7..7>);
-        R[d] = R_
+        SREG_Z = tmp_Z & SREG_Z;
+        SREG_C = (!R[dl]<7..7> & k<7..7>) | (k<7..7> & R_<7..7>) | (R_<7..7> & R[dl]<7..7>);
+        R[d] = R_;
       }
 
   op SBIW(d: card(2), k: card(6))
@@ -122,10 +121,10 @@ let URL = ""
     image = format("1001 0111 %2b%2b %4b", k<5..4>, d, k<3..0>)
     action = {
       let R_ = (R[dh]::R[dl]) - k;
-      SREG_V = R[dh]<7..7> && !R_<15..15>;
+      SREG_V = R[dh]<7..7> & !R_<15..15>;
       SREG_N = R_<15..15>;
       SREG_Z = R_ == 0;
-      SREG_C = R_<15..15> && !R[dh]<7..7>;
+      SREG_C = R_<15..15> & !R[dh]<7..7>;
       SREG_S = SREG_N ^ SREG_V;
       R[dh]::R[dl] = R_;
     }
@@ -152,20 +151,20 @@ let URL = ""
       SREG_N = R_<7..7>;
       SREG_S = SREG_N;
       SREG_Z = R_ == 0;
-      R[dl] = R_
+      R[dl] = R_;
     }
 
   op OR(d: rindex, r: rindex)
     syntax = format("OR R%d, R%d", d, r)
     image = format("0010 10%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
     action = {
-      let R_ = R[d] || R[r];
+      let R_ = R[d] | R[r];
       SREG_N = R_<7..7>;
       SREG_V = 0;
       SREG_S = SREG_N ^ SREG_S;
       SREG_Z = R_ == 0;
 
-      R[d] = R_
+      R[d] = R_;
       }
   
   op ORI(d: card(4), k: card(8))
@@ -173,13 +172,13 @@ let URL = ""
     syntax = format("ORI R%d, %d", dl, k)
     image = format("0110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
     action = {
-      let R_ = R[dl] || k;
+      let R_ = R[dl] | k;
       SREG_N = R_<7..7>;
       SREG_V = 0;
       SREG_S = SREG_N ^ SREG_S;
       SREG_Z = R_ == 0;
 
-      R[d] = R_
+      R[d] = R_;
       }
 
   op EOR(d : rindex, r: rindex)
@@ -192,7 +191,7 @@ let URL = ""
         SREG_S = SREG_N ^ SREG_S;
         SREG_Z = R_ == 0;
         
-        R[d] = R_
+        R[d] = R_;
       }
   
   op COM(d: rindex)
@@ -206,22 +205,22 @@ let URL = ""
         SREG_S = SREG_N ^ SREG_V;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op NEG(d: rindex)
     syntax = format("NEG R%d", d)
-    image = format("1001 010%1b %4b 0001", d<4..4>, d<3..0>")
+    image = format("1001 010%1b %4b 0001", d<4..4>, d<3..0>)
     action = {
         let R_ = 0x00 - R[d]; 
         SREG_N = R_<7..7>;
         SREG_V = R_ == 16;
         SREG_S = SREG_N ^ SREG_V;
-        SREG_H = R_<3..3> || R[d]<3..3>;
+        SREG_H = R_<3..3> | R[d]<3..3>;
         SREG_Z = R_ == 0;
         SREG_C = R_ != 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op SBR(d: card(4), k: card(8))
@@ -229,33 +228,33 @@ let URL = ""
     syntax = format("ORI R%d, %d", dl, k)
     image = format("0110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
     action = {
-      let R_ = R[dl] || k;
+      let R_ = R[dl] | k;
       SREG_N = R_<7..7>;
       SREG_V = 0;
       SREG_S = SREG_N ^ SREG_S;
       SREG_Z = R_ == 0;
 
-      R[d] = R_
+      R[d] = R_;
       }
 
   op CBR(d: card(4), k: card(8))
     dl = 16 + d
     syntax = format("CBR R%d, %d", dl, k)
-    image = format("0111 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>")
+    image = format("0111 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
     action = {
-        let R_ = R[dl] && (0xFF - k);
-        let R_ = R[dl] || k;
+        let R_ = R[dl] & (0xFF - k);
+        let R_ = R[dl] | k;
         SREG_N = R_<7..7>;
         SREG_V = 0;
         SREG_S = SREG_N ^ SREG_S;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
   
   op INC(d: rindex)
     syntax = format("INC R%d", d)
-    image = format("1001 010%1b %4b 0011 ", d<4..4>, d<3..0>")
+    image = format("1001 010%1b %4b 0011 ", d<4..4>, d<3..0>)
     action = {
         let R_ = R[d] + 1;
         SREG_N = R_<7..7>;
@@ -263,12 +262,12 @@ let URL = ""
         SREG_S = SREG_N ^ SREG_S;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op DEC(d: rindex)
     syntax = format("DEC R%d", d)
-    image = format("1001 010%1b %4b 0101 ", d<4..4>, d<3..0>")
+    image = format("1001 010%1b %4b 0101 ", d<4..4>, d<3..0>)
     action = {
         let R_ = R[d] - 1;
         SREG_N = R_<7..7>;
@@ -276,21 +275,21 @@ let URL = ""
         SREG_S = SREG_N ^ SREG_S;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op TST(d: rindex)
     syntax = format("TST R%d", d)
     image = format("0010 00%1b%1b %4b %4b", d<4..4>, d<4..4>, d<3..0>, d<3..0>)
     action = {
-        let R_ = R[d] && R[d];
+        let R_ = R[d] & R[d];
         SREG_C = 1;
         SREG_V = 0;
         SREG_N = R_<7..7>;
         SREG_S = SREG_N ^ SREG_V;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op CLR(d : rindex)
@@ -303,98 +302,99 @@ let URL = ""
         SREG_S = 0;
         SREG_Z = 1;
         
-        R[d] = R_
+        R[d] = R_;
       }
 
   op SER(d: card(4))
-    dl = 16 + d
-    syntax = format("SER R%d", dl)
+    syntax = format("SER R%d", 16 + d)
     image = format("1110 1111 %4b 1111", d<3..0>)
     action = {
         let R_ = 0xFF;
-        R[d] = R_
+        R[d] = R_;
       }
 
   op MUL(d: rindex, r:rindex)
-    syntax = format("MUL R%, R%", d, r)
+    syntax = format("MUL R%d, R%d", d, r)
     image = format("1001 11%1b%1b %4b %4b", r<4..4>, d<4..4>, d<3..0>, r<3..0>)
     action = {
-        let R_ = R[d] * R[r];
+        let R_ : card(16) = R[d] * R[r];
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
   op MULS(d: card(4), r:card(4))
-    dl = 16 + d 
-    rl = 16 + r
-    syntax = format("MULS R%, R%", dl, rl)
+    syntax = format("MULS R%d, R%d", 16 + d, 16 + r)
     image = format("1001 0010 %4b %4b", d<3..0>, r<3..0>)
     action = {
-        let R_ = R[dl] * R[rl];
+        let dl = 16 + d;
+        let rl = 16 + r;
+        let R_ : card(16) = R[dl] * R[rl];
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
 
  op MULSU(d: card(3), r:card(3))
-    dl = 16 + d 
-    rl = 16 + r
-    syntax = format("MULSU R%, R%", dl, rl)
+    syntax = format("MULSU R%d, R%d", 16 + d, 16 + r)
     image = format("0000 0011 1%3b 1%3b", d<2..0>, r<2..0>)
     action = {
-        let R_ = R[dl] * R[rl];
+        let dl = 16 + d;
+        let rl = 16 + r;
+        let R_ : card(16) = R[dl] * R[rl];
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
  
  op FMUL(d: card(3), r:card(3))
-    dl = 16 + d 
-    rl = 16 + r
-    syntax = format("FMUL R%, R%", dl, rl)
+    syntax = format("FMUL R%d, R%d", 16 + d, 16 + r)
     image = format("0000 0011 0%3b 1%3b", d<2..0>, r<2..0>)
     action = {
-        let R_ = R[dl] * R[rl];
+        let dl = 16 + d;
+        let rl = 16 + r;
+        let R_ : card(16) = R[dl] * R[rl];
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_;
       }
   
   op FMULS(d: card(3), r:card(3))
-    dl = 16 + d 
-    rl = 16 + r
-    syntax = format("FMULS R%, R%", dl, rl)
+    syntax = format("FMULS R%d, R%d", 16 + d, 16 + r)
     image = format("0000 0011 1%3b 0%3b", d<2..0>, r<2..0>)
     action = {
-        let R_ = R[dl] * R[rl];
-        SREG_C = R_<15..15>; // 16 ????
+        let dl = 16 + d;
+        let rl = 16 + r;
+        let R_ : card(32) = R[dl] * R[rl];
+        SREG_C = R_<16..16>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_<0..15>;
       }
   
   op FMULSU(d: card(3), r:card(3))
-    dl = 16 + d 
-    rl = 16 + r
-    syntax = format("FMULSU R%, R%", dl, rl)
+    syntax = format("FMULSU R%d, R%d", 16 + d, 16 + r)
     image = format("0000 0011 1%3b 1%3b", d<2..0>, r<2..0>)
     action = {
-        let R_ = R[dl] * R[rl];
-        SREG_C = R_<15..15>; // 16 ????
+        let dl = 16 + d;
+        let rl = 16 + r;
+        let R_ : card(32) = R[dl] * R[rl];
+        SREG_C = R_<16..16>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_
+        R[d] = R_<0..15>;
       }
-  
-  op DES(k: card(8))
-    syntax = format("DES %d", k)
-    image = format("1001 0100 %4b 1011", k<3..0>)
-    action = {}
+
+// Bon courage !
+// (voir DES sur wikipedia)
+//  op DES(k: card(4))
+//    syntax = format("DES %d", k)
+//    image = format("1001 0100 %4b 1011", k<3..0>)
+//    action = {}
 
 
 
