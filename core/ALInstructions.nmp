@@ -223,34 +223,34 @@ let URL = ""
         R[d] = R_;
       }
 
-  op SBR(d: card(4), k: card(8))
-    dl = 16 + d
-    syntax = format("ORI R%d, %d", dl, k)
-    image = format("0110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
-    action = {
-      let R_ = R[dl] | k;
-      SREG_N = R_<7..7>;
-      SREG_V = 0;
-      SREG_S = SREG_N ^ SREG_S;
-      SREG_Z = R_ == 0;
+//  op SBR(d: card(4), k: card(8))
+//    dl = 16 + d
+//    syntax = format("SBR R%d, %d", dl, k)
+//    image = format("0110 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
+//    action = {
+//      let R_ = R[dl] | k;
+//      SREG_N = R_<7..7>;
+//      SREG_V = 0;
+//      SREG_S = SREG_N ^ SREG_S;
+//      SREG_Z = R_ == 0;
+//
+//      R[d] = R_;
+//      }
 
-      R[d] = R_;
-      }
-
-  op CBR(d: card(4), k: card(8))
-    dl = 16 + d
-    syntax = format("CBR R%d, %d", dl, k)
-    image = format("0111 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
-    action = {
-        let R_ = R[dl] & (0xFF - k);
-        let R_ = R[dl] | k;
-        SREG_N = R_<7..7>;
-        SREG_V = 0;
-        SREG_S = SREG_N ^ SREG_S;
-        SREG_Z = R_ == 0;
-
-        R[d] = R_;
-      }
+//  op CBR(d: card(4), k: card(8))
+//    dl = 16 + d
+//    syntax = format("CBR R%d, %d", dl, k)
+//    image = format("0111 %4b %4b %4b", k<7..4>, d<3..0>, k<3..0>)
+//    action = {
+//        let R_ = R[dl] & (0xFF - k);
+//        let R_ = R[dl] | k;
+//        SREG_N = R_<7..7>;
+//        SREG_V = 0;
+//        SREG_S = SREG_N ^ SREG_S;
+//        SREG_Z = R_ == 0;
+//
+//        R[d] = R_;
+//      }
   
   op INC(d: rindex)
     syntax = format("INC R%d", d)
@@ -267,7 +267,7 @@ let URL = ""
 
   op DEC(d: rindex)
     syntax = format("DEC R%d", d)
-    image = format("1001 010%1b %4b 0101 ", d<4..4>, d<3..0>)
+    image = format("1001 010%1b %4b 1010 ", d<4..4>, d<3..0>)
     action = {
         let R_ = R[d] - 1;
         SREG_N = R_<7..7>;
@@ -278,32 +278,32 @@ let URL = ""
         R[d] = R_;
       }
 
-  op TST(d: rindex)
-    syntax = format("TST R%d", d)
-    image = format("0010 00%1b%1b %4b %4b", d<4..4>, d<4..4>, d<3..0>, d<3..0>)
-    action = {
-        let R_ = R[d] & R[d];
-        SREG_C = 1;
-        SREG_V = 0;
-        SREG_N = R_<7..7>;
-        SREG_S = SREG_N ^ SREG_V;
-        SREG_Z = R_ == 0;
-
-        R[d] = R_;
-      }
-
-  op CLR(d : rindex)
-    syntax = format("TST R%d", d)
-    image = format("0010 01%1b%1b %4b %4b",  d<4..4>, d<4..4>, d<3..0>, d<3..0>)
-    action = {
-        let R_ = R[d] ^ R[d];
-        SREG_N = 0;
-        SREG_V = 0;
-        SREG_S = 0;
-        SREG_Z = 1;
-        
-        R[d] = R_;
-      }
+//  op TST(d: rindex)
+//    syntax = format("TST R%d", d)
+//    image = format("0010 00%1b%1b %4b %4b", d<4..4>, d<4..4>, d<3..0>, d<3..0>)
+//    action = {
+//        let R_ = R[d] & R[d];
+//        SREG_C = 1;
+//        SREG_V = 0;
+//        SREG_N = R_<7..7>;
+//        SREG_S = SREG_N ^ SREG_V;
+//        SREG_Z = R_ == 0;
+//
+//        R[d] = R_;
+//      }
+//
+//  op CLR(d : rindex)
+//    syntax = format("CLR R%d", d)
+//    image = format("0010 01%1b%1b %4b %4b",  d<4..4>, d<4..4>, d<3..0>, d<3..0>)
+//    action = {
+//        let R_ = R[d] ^ R[d];
+//        SREG_N = 0;
+//        SREG_V = 0;
+//        SREG_S = 0;
+//        SREG_Z = 1;
+//        
+//        R[d] = R_;
+//      }
 
   op SER(d: card(4))
     syntax = format("SER R%d", 16 + d)
@@ -321,12 +321,13 @@ let URL = ""
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
 
   op MULS(d: card(4), r:card(4))
     syntax = format("MULS R%d, R%d", 16 + d, 16 + r)
-    image = format("1001 0010 %4b %4b", d<3..0>, r<3..0>)
+    image = format("0000 0010 %4b %4b", d<3..0>, r<3..0>)
     action = {
         let dl = 16 + d;
         let rl = 16 + r;
@@ -334,12 +335,13 @@ let URL = ""
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
 
  op MULSU(d: card(3), r:card(3))
     syntax = format("MULSU R%d, R%d", 16 + d, 16 + r)
-    image = format("0000 0011 1%3b 1%3b", d<2..0>, r<2..0>)
+    image = format("0000 0011 0%3b 0%3b", d<2..0>, r<2..0>)
     action = {
         let dl = 16 + d;
         let rl = 16 + r;
@@ -347,7 +349,8 @@ let URL = ""
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
  
  op FMUL(d: card(3), r:card(3))
@@ -360,7 +363,8 @@ let URL = ""
         SREG_C = R_<15..15>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
   
   op FMULS(d: card(3), r:card(3))
@@ -373,7 +377,8 @@ let URL = ""
         SREG_C = R_<16..16>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_<0..15>;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
   
   op FMULSU(d: card(3), r:card(3))
@@ -386,7 +391,8 @@ let URL = ""
         SREG_C = R_<16..16>;
         SREG_Z = R_ == 0;
 
-        R[d] = R_<0..15>;
+        R[0] = R_ >> 8;
+        R[1] = R_ & 0xFF;
       }
 
 // Bon courage !

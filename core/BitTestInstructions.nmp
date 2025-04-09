@@ -40,24 +40,24 @@ op LSR(d: rindex)
         R[d] = R_;
     }
 
-op ROL(d: card(10))
-    syntax = format("ROL R%d", d)
-    image = format("0001 11%2b %4b %4b", d<9..8>, d<7..4>, d<3..0>)
-    action = {
-        let dd: card(5) = d<4..0>;
-        let value = R[dd];
-        let b7 = value<7..7>;
-        let R_ = (R[dd] << 1) | SREG_C; //SREG_C is the lower bit
-
-        SREG_C = b7;
-        SREG_Z = R_ == 0;
-        SREG_N = R_<7..7>;
-        SREG_V = SREG_N ^ SREG_C;
-        SREG_S = SREG_N ^ SREG_V;
-        SREG_H = R[dd]<3..3>;
-
-        R[dd] = R_;
-    }
+//op ROL(d: card(10))
+//    syntax = format("ROL R%d", d)
+//    image = format("0001 11%2b %4b %4b", d<9..8>, d<7..4>, d<3..0>)
+//    action = {
+//        let dd: card(5) = d<4..0>;
+//        let value = R[dd];
+//        let b7 = value<7..7>;
+//        let R_ = (R[dd] << 1) | SREG_C; //SREG_C is the lower bit
+//
+//        SREG_C = b7;
+//        SREG_Z = R_ == 0;
+//        SREG_N = R_<7..7>;
+//        SREG_V = SREG_N ^ SREG_C;
+//        SREG_S = SREG_N ^ SREG_V;
+//        SREG_H = R[dd]<3..3>;
+//
+//        R[dd] = R_;
+//    }
 
 op ROR(d: rindex)
     syntax = format("ROR R%d", d)
