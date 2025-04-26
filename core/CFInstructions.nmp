@@ -5,25 +5,15 @@ let ARCH = "avr"
 let BUILDER = "atmel"
 let LICENSE = "GPL"
 let COPYRIGHT = "University of Toulouse"
-let YEAR = "2019"
+let YEAR = "2025"
 let URL = ""
-
-
-macro size_next_inst(op: int, result: int) = {
-    if op & 0xFE0E == 0x940C  then
-        result = 2;  // CALL ou JMP : instruction de 32 bits
-    elseif op & 0xFE0F == 0x9000 then
-        result = 2;  // LDS ou STS : instruction de 32 bits
-    else
-        result = 1;  // Par défaut : instruction de 16 bits
-    endif;
-}
 
 ////// Change of Flow Instructions //////
 
+
 op RJMP(k: int(12))
 	syntax = format("RJMP .%+d ; %04x", k*2, __IADDR + k*2 + 2)
-	image = format("1100 %12b", k<11...0>)
+	image = format("1100 %12b", k<11..0>)
 	action = {
 		PC = PC + k*2;
 	}
@@ -39,9 +29,8 @@ op JMP(k: card(22))
     syntax = format("JMP %d (%04x)", k*2, __IADDR + k*2 + 2)
     image = format("1001 010%5b 110%17b",k<21..17>,k<16..0>)
     action = {
-        PC=k<15..0>
+        PC=k<15..0>;
     }
-
 
 op RCALL(k: int(12))
 	syntax = format("RCALL %d (%04x)", k*2, __IADDR + k*2 + 2)
@@ -66,8 +55,8 @@ op ICALL()
     }
 
 op CALL(k: card(22))
-    syntax = format("CALL 0x%04x", k)
-    image = format("1001 010%8b 111%17b", k<21..17>, k<16..0>)
+    syntax = format("CALL %d (%04x)", k*2, __IADDR + k*2 + 2)
+    image = format("1001 010%5b 111%17b",k<21..17>,k<16..0>)
     action = {
         
         M[SP]= PC <7..0>;
@@ -102,13 +91,10 @@ op CPSE(d:rindex, r:rindex)
     syntax = format("CSPE R%d, R%d",d,r)
     image = format("0001 00%1b %5b %4b", r<4..4>, d, r<3..0>)
     action = {
-        let Rd = R[d];
-        let Rr = R[r];
+        let Rd : card(16) = R[d];
+        let Rr : card(16) = R[r];
         if Rd == Rr then 
-            let result=0;
-            let next_Op = (M[PC+2]) | (M[PC+3] << 8);
-            size_next_inst (next_Op,result)
-            PC=PC+ (result *2);
+            SKIP_NEXT= 1;
         endif;
     }
 
@@ -116,15 +102,15 @@ op CP(d: rindex, r: rindex)
     syntax = format("CP R%d, R%d", d, r)
     image = format("0001 01%1b %5b %4b", r<4..4>, d, r<3..0>)
     action = {
-        let Rd = R[d];
-        let Rr = R[r];
-        let R = Rd - Rr;
-        SREG_H = !Rd<3..3>&& Rr<3..3> || Rr<3..3>&& R<3..3> || R<3..3>&&!Rd<3..3>;
-		SREG_V = Rd<7..7>&&!Rr<7..7>&&!R<7..7> || !Rd<7..7>&&Rr<7..7>&&R<7..7>;
+        let Rd: card(8) = R[d];
+        let Rr : card(8) = R[r];
+        let R : card(8) = Rd - Rr;
+        SREG_H = ~Rd<3..3>& Rr<3..3> | Rr<3..3>& R<3..3> | R<3..3>&~Rd<3..3>;
+		SREG_V = Rd<7..7> & ~Rr<7..7> &~R<7..7> | ~Rd<7..7> & Rr<7..7> & R<7..7>;
         SREG_N = R<7..7>;
         SREG_Z = R==0;
-		SREG_C = !Rd<7..7>&&Rr<7..7> || Rr<7..7>&&R<7..7> || R<7..7>&&!Rd<7..7>;
-        SREG_S = SREG_H ^ SREG_V ;
+		SREG_C = ~Rd<7..7>& Rr<7..7> | Rr<7..7> & R<7..7> | R<7..7> & ~Rd<7..7>;
+        SREG_S = SREG_N ^ SREG_V ;
     }
 
 
@@ -132,14 +118,14 @@ op CPC(d: rindex, r: rindex)
 	syntax = format("CPC R%d, R%d", d, r)
 	image = format("0000 01%1b %5b %4b", r<4..4>, d, r<3..0>)
 	action = {
-		let Rd = R[d];
-		let Rr = R[r];
-		let R = Rd - Rr - SREG_C;
-		SREG_H = !Rd<3..3>&&Rr<3..3> || Rr<3..3>&&R<3..3> || R<3..3>&&!Rd<3..3>;
-		SREG_V = Rd<7..7>&&!Rr<7..7>&&!R<7..7> || !Rd<7..7>&&Rr<7..7>&&R<7..7>;
-		SREG_N = R<7..7>;
+		let Rd : card(16) = R[d];
+		let Rr : card(16)= R[r];
+		let R : card(16) = Rd - Rr - SREG_C;
+		SREG_H = ~Rd<3..3> & Rr<3..3> | Rr<3..3> &R<3..3> | R<3..3>&~Rd<3..3>;
+		SREG_V = Rd<7..7>&~Rr<7..7>&~R<7..7> | ~Rd<7..7>&Rr<7..7>&&R<7..7>;
+		SREG_N = R<7..7>; 
 		SREG_Z = R == 0;
-		SREG_C = !Rd<7..7>&&Rr<7..7> || Rr<7..7>&&R<7..7> || R<7..7>&&!Rd<7..7>;
+		SREG_C = ~Rd<7..7>&Rr<7..7> | Rr<7..7>&R<7..7> | R<7..7>&~Rd<7..7>;
 		SREG_S = SREG_N ^ SREG_V;
 	}
 
@@ -147,27 +133,23 @@ op CPI(d: card(4), k: card(8))
 	syntax = format("CPI R%d, 0x%02x ; %d", d+16, k, k)
 	image = format("0011 %4b %4b %4b", k<7..4>, d, k<3..0>)
 	action = {
-		let Rd = R[d + 16];
-		let R = Rd - k;
-		SREG_H = !Rd<3..3>&&k<3..3> || k<3..3>&&R<3..3> || R<3..3>&&!Rd<3..3>;
-		SREG_V = Rd<7..7>&&!k<7..7>&&!R<7..7> || !Rd<7..7>&&k<7..7>&&R<7..7>;
+		let Rd : card(16) = R[d + 16];
+		let R : card(16) = Rd - k;
+		SREG_H = ~Rd<3..3>&k<3..3> | k<3..3>&R<3..3> | R<3..3>&~Rd<3..3>;
+		SREG_V = Rd<7..7>&~k<7..7>&~R<7..7> | ~Rd<7..7>&k<7..7>&R<7..7>;
 		SREG_N = R<7..7>;
 		SREG_Z = R == 0;
-		SREG_C = !Rd<7..7>&&k<7..7> || k<7..7>&&R<7..7> || R<7..7>&&!Rd<7..7>;
+		SREG_C = ~Rd<7..7>&k<7..7> | k<7..7>&R<7..7> | R<7..7>&~Rd<7..7>;
 		SREG_S = SREG_N ^ SREG_V;
 	}
 
 op SBRC(r: rindex , b: card(3))
     syntax = format("SBRC R%d, %d",r,b)
-    image = format("1111 111%5b 0%3b",r,b)
+    image = format("1111 110%5b 0%3b",r,b)
     action = {
-        let Rr = R[r];
-        if Rr<b..b>==0 
-        then 
-            let result=0;
-            let next_Op = (M[PC+2]) | (M[PC+3] << 8);
-            size_next_inst (next_Op,result)
-            if result == 1 then PC=PC+2; else PC=PC+4; endif;
+        let Rr : card(16) = R[r];
+        if Rr<b..b>==0 then 
+            SKIP_NEXT= 1;
         endif;
     }
 
@@ -175,13 +157,10 @@ op SBRS(r: rindex , b: card(3))
     syntax = format("SBRS R%d, %d",r,b)
     image = format("1111 111%5b 0%3b",r,b)
     action = {
-        let Rr = R[r];
+        let Rr : card(16) = R[r];
         if Rr<b..b>==1
         then 
-            let result=0;
-            let next_Op = (M[PC+2]) | (M[PC+3] << 8);
-            size_next_inst (next_Op,result)
-            if result == 1 then PC=PC+2; else PC=PC+4; endif;
+            SKIP_NEXT= 1;
         endif;
     }
 
@@ -189,41 +168,19 @@ op SBIC(a: rindex, b: card(3))
     syntax = format("SBIC IO%d, %d",a,b)
     image = format("1001 1001 %4b %1b%3b",a<4..1>, a<0..0>, b<2..0>)
     action = {
-        let x= IO[a]<b..b>;
+        let x : card(1) = IO[a]<b..b>;
         if x == 0 then 
-            let result=0;
-            let next_Op = (M[PC+2]) | (M[PC+3] << 8);
-            size_next_inst (next_Op,result)
-            if result == 1 then PC=PC+2; else PC=PC+4; endif;
+            SKIP_NEXT= 1;
         endif;
     }
 op SBIS(a: rindex, b: card(3)) 
     syntax = format("SBIC IO%d, %d",a,b)
     image = format("1001 1011 %4b %1b%3b",a<4..1>, a<0..0>, b<2..0>)
     action = {
-        let x= IO[a]<b..b>;
+        let x : card(1)= IO[a]<b..b>;
         if x == 1 then 
-            let result=0;
-            let next_Op = (M[PC+2]) | (M[PC+3] << 8);
-            size_next_inst (next_Op,result)
-            if result == 1 then PC=PC+2; else PC=PC+4; endif;
+            SKIP_NEXT= 1;
         endif;
-    }
-
-op BRBS(s : card(3), k: int(7))
-    syntax = format("BRBS %) // TOCOMPLETE
-    image = format("1111 00%7b %3b", k<6..0>,s<2..0>)
-    action = {
-        let SREGS = SREG_S<s..s>;
-        if SREGS == 1 then PC = PC + k*2; endif;
-    }
-
-op BRBC(s : card(3), k: int(7))
-    syntax = format("BRBC %) // TOCOMPLETE
-    image = format("1111 01%7b %3b", k<6..0>,s<2..0>)
-    action = {
-        let SREGS = SREG_S<s..s>;
-        if SREGS == 0 then PC = PC + k*2; endif;
     }
 
 op BREQ(k: int(7))
@@ -253,9 +210,6 @@ op BRCC (k: int(7))
     action = {
         if SREG_C == 0 then PC = PC+k*2; endif;
     }
-
-// op BRSH ()  exactement même opcode que brcc
-// op BRLO ()  exactement même opcode que brcs
 
 op BRMI (k:  int(7))
     syntax = format("BRMI .%+d ; %+04x", k*2, __IADDR + 2 + k*2)

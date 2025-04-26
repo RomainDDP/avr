@@ -29,6 +29,8 @@ reg Z[1, word] alias = R[30]
 reg PC[1, word] pc = 1
 reg SP[1, word]
 
+//register IO
+reg IO[64, byte]
 
 // status register
 reg SREG[1, byte]
@@ -40,6 +42,9 @@ reg SREG_V[1, bit] alias = SREG<3..3>
 reg SREG_N[1, bit] alias = SREG<2..2>
 reg SREG_Z[1, bit] alias = SREG<1..1>
 reg SREG_C[1, bit] alias = SREG<0..0>
+
+reg SKIP_NEXT[1, bit]
+
 
 
 // memories
@@ -56,17 +61,28 @@ mem M[16, byte] data_memory = 1
 mem M16[16, word] alias = M[0]
 mem FLASH[17, byte] program_memory = 1
 
-macro store(a, x) = if a < 32 then R[a] = x; else M[a] = x; endif
-macro load(x, a) = if a < 32 then x = R[a]; else x = M[a]; endif
 
-op init()
-	action = {
+//MMU
 
-		// set SP
-		SP = RAMEND;
-		M[0x3D + 0x20] = RAMEND<7..0>;
-		M[0x3E + 0x20] = RAMEND<15..8>;
+macro store(a, x) = 			\
+	if (a < 0x0020) then		\
+		R[a] = x; 				\
+	else 						\
+		if (a < 0x0060) then 	\
+			IO[a - 0x0020] = x; \
+		else					\
+			M[a - 0x0060] = x;	\
+		endif;					\
+	endif;			
 
-		// set PC
-		PC = 0;
-	}
+
+macro load(x, a) =				\
+	if (a < 0x0020) then 		\
+		x = R[a]; 				\
+	else 						\
+		if (a < 0x0060) then 	\
+			x = IO[a - 0x0020]; \ 
+		else 					\
+			x = M[a - 0x0060]; 	\
+		endif; 					\
+	endif;			
