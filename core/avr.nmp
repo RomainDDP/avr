@@ -75,8 +75,4 @@ op inst32(x: all_inst32)
     }
 
 op all_inst32 =
-<<<<<<< HEAD
-	  LDS | STS
-=======
 	  LDS | STS | JMP | CALL
->>>>>>> flow_inst
