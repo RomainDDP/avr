@@ -43,6 +43,9 @@ reg SREG_N[1, bit] alias = SREG<2..2>
 reg SREG_Z[1, bit] alias = SREG<1..1>
 reg SREG_C[1, bit] alias = SREG<0..0>
 
+reg SKIP_NEXT[1, bit]
+
+
 
 // memories
 
