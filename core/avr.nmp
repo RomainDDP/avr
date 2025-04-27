@@ -12,6 +12,7 @@ include "config.nmp"
 include "DTInstructions.nmp"
 include "BitTestInstructions.nmp"
 include "ALInstructions.nmp"
+include "CFInstructions.nmp"
 
 
 

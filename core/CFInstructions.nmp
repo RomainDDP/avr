@@ -284,6 +284,7 @@ op BRIE (k: int(7))
 	action = {
 		if SREG_I == 1 then PC = PC + k*2; endif;
 	}
+	
 op BRID (k: int(7))
 	syntax = format("BRID .%+d ; %+04x", k*2, __IADDR + 2 + k*2)
 	image = format("1111 01 %7b 111", k)
